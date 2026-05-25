@@ -4,6 +4,8 @@ import {
   GetObjectCommand,
   DeleteObjectCommand,
   HeadObjectCommand,
+  HeadBucketCommand,
+  CreateBucketCommand,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
@@ -18,6 +20,46 @@ const s3 = new S3Client({
 })
 
 const BUCKET = process.env.S3_BUCKET!
+let bucketReady: Promise<void> | null = null
+
+function getS3StatusCode(error: unknown): number | undefined {
+  return (error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode
+}
+
+function getS3ErrorName(error: unknown): string | undefined {
+  return (error as { name?: string; Code?: string }).name ?? (error as { Code?: string }).Code
+}
+
+export async function ensureBucket(): Promise<void> {
+  if (!bucketReady) {
+    bucketReady = (async () => {
+      try {
+        await s3.send(new HeadBucketCommand({ Bucket: BUCKET }))
+      } catch (error) {
+        const statusCode = getS3StatusCode(error)
+        if (statusCode !== 404) throw error
+
+        try {
+          await s3.send(new CreateBucketCommand({ Bucket: BUCKET }))
+        } catch (createError) {
+          const createStatusCode = getS3StatusCode(createError)
+          const createName = getS3ErrorName(createError)
+          const alreadyExists =
+            createStatusCode === 409 ||
+            createName === 'BucketAlreadyOwnedByYou' ||
+            createName === 'BucketAlreadyExists'
+
+          if (!alreadyExists) throw createError
+        }
+      }
+    })().catch((error) => {
+      bucketReady = null
+      throw error
+    })
+  }
+
+  return bucketReady
+}
 
 export async function uploadFile(
   key: string,
@@ -25,6 +67,7 @@ export async function uploadFile(
   contentType: string,
   metadata?: Record<string, string>,
 ): Promise<void> {
+  await ensureBucket()
   await s3.send(
     new PutObjectCommand({
       Bucket: BUCKET,
@@ -38,6 +81,7 @@ export async function uploadFile(
 }
 
 export async function downloadFile(key: string): Promise<Buffer> {
+  await ensureBucket()
   const res = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }))
   const chunks: Uint8Array[] = []
   for await (const chunk of res.Body as AsyncIterable<Uint8Array>) {
@@ -47,11 +91,13 @@ export async function downloadFile(key: string): Promise<Buffer> {
 }
 
 export async function deleteFile(key: string): Promise<void> {
+  await ensureBucket()
   await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }))
 }
 
 export async function fileExists(key: string): Promise<boolean> {
   try {
+    await ensureBucket()
     await s3.send(new HeadObjectCommand({ Bucket: BUCKET, Key: key }))
     return true
   } catch {
@@ -61,6 +107,7 @@ export async function fileExists(key: string): Promise<boolean> {
 
 // Presigned URL valid for 30 seconds — for internal secure streaming only
 export async function getPresignedUrl(key: string, expiresIn = 30): Promise<string> {
+  await ensureBucket()
   return getSignedUrl(s3, new GetObjectCommand({ Bucket: BUCKET, Key: key }), { expiresIn })
 }
 

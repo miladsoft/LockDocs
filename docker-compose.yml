@@ -60,6 +60,26 @@ services:
     networks:
       - vaultix-network
 
+  # ─── MinIO Bucket Bootstrap ────────────────────────────────
+  minio-init:
+    image: minio/mc:latest
+    container_name: vaultix-minio-init
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-vaultix_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-changeme_minio}
+      S3_BUCKET: ${S3_BUCKET:-vaultix-documents}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set vaultix http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} &&
+      mc mb --ignore-existing vaultix/$${S3_BUCKET}
+      "
+    networks:
+      - vaultix-network
+
   # ─── Next.js App ────────────────────────────────────────────
   app:
     build:
@@ -111,6 +131,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
       interval: 30s
