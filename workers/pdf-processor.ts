@@ -9,13 +9,13 @@
 import { Worker } from 'bullmq'
 import { Redis } from 'ioredis'
 import { PrismaClient } from '@prisma/client'
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
 import crypto from 'crypto'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
-import { writeFile, readFile, unlink, mkdir } from 'fs/promises'
+import { writeFile, readFile, unlink, mkdir, rm, readdir } from 'fs/promises'
 import { tmpdir } from 'os'
-import { join } from 'path'
+import { basename, extname, join } from 'path'
 
 const execFileAsync = promisify(execFile)
 
@@ -55,7 +55,6 @@ function encryptKey(plaintext: string): string {
 }
 
 async function downloadFromS3(key: string): Promise<Buffer> {
-  const { GetObjectCommand } = await import('@aws-sdk/client-s3')
   const res = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }))
   const chunks: Uint8Array[] = []
   for await (const chunk of res.Body as AsyncIterable<Uint8Array>) {
@@ -71,9 +70,33 @@ async function uploadPageToS3(key: string, buffer: Buffer): Promise<void> {
       Key: key,
       Body: buffer,
       ContentType: 'image/jpeg',
-      ServerSideEncryption: 'AES256',
     }),
   )
+}
+
+async function convertOfficeToPdf(inputPath: string, outputDir: string): Promise<string> {
+  await execFileAsync(
+    'soffice',
+    [
+      '--headless',
+      '--nologo',
+      '--nofirststartwizard',
+      '--nodefault',
+      '--norestore',
+      '--convert-to',
+      'pdf',
+      '--outdir',
+      outputDir,
+      inputPath,
+    ],
+    { timeout: 120_000 },
+  )
+
+  const expected = join(outputDir, `${basename(inputPath, extname(inputPath))}.pdf`)
+  const files = await readdir(outputDir)
+  const converted = files.find((file) => file.toLowerCase().endsWith('.pdf'))
+
+  return converted ? join(outputDir, converted) : expected
 }
 
 async function convertPdfPageToImage(
@@ -146,9 +169,22 @@ const worker = new Worker(
 
       let pageCount = 1
 
-      if (mimeType === 'application/pdf') {
-        const pdfPath = join(tmpDir, 'document.pdf')
-        await writeFile(pdfPath, fileBuffer)
+      if (
+        mimeType === 'application/pdf' ||
+        mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      ) {
+        let pdfPath = join(tmpDir, 'document.pdf')
+
+        if (mimeType === 'application/pdf') {
+          await writeFile(pdfPath, fileBuffer)
+        } else {
+          const extension = mimeType.includes('spreadsheetml') ? 'xlsx' : 'docx'
+          const officePath = join(tmpDir, `document.${extension}`)
+          await writeFile(officePath, fileBuffer)
+          pdfPath = await convertOfficeToPdf(officePath, tmpDir)
+        }
+
         pageCount = await getPageCount(pdfPath)
 
         for (let page = 1; page <= pageCount; page++) {
@@ -182,7 +218,7 @@ const worker = new Worker(
           })
         }
 
-        await unlink(join(tmpDir, 'document.pdf')).catch(() => {})
+        await rm(tmpDir, { recursive: true, force: true }).catch(() => {})
       } else {
         // For images: store as-is with a single page
         const sharp = (await import('sharp')).default
@@ -226,7 +262,10 @@ const worker = new Worker(
       console.error(`[worker] Failed to process ${documentId}:`, error)
       await prisma.document.update({
         where: { id: documentId },
-        data: { status: 'FAILED' },
+        data: {
+          status: 'FAILED',
+          pages: { deleteMany: {} },
+        },
       })
       throw error
     }

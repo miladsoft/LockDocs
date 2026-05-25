@@ -43,11 +43,23 @@ export default async function ViewPage({ params, searchParams }: Props) {
   }
 
   if (share.expiresAt && share.expiresAt < new Date()) {
+    await prisma.share.update({ where: { id: share.id }, data: { status: 'EXPIRED' } }).catch(() => {})
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <div className="text-center text-white p-8">
           <h1 className="text-2xl font-bold mb-2">Link Expired</h1>
           <p className="text-slate-400">This document link is no longer valid.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (share.maxViews !== null && share.currentViews >= share.maxViews) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="text-center text-white p-8">
+          <h1 className="text-2xl font-bold mb-2">View Limit Reached</h1>
+          <p className="text-slate-400">This document link has reached its maximum number of views.</p>
         </div>
       </div>
     )
@@ -63,6 +75,11 @@ export default async function ViewPage({ params, searchParams }: Props) {
       </div>
     )
   }
+
+  await prisma.share.update({
+    where: { id: share.id },
+    data: { currentViews: { increment: 1 } },
+  })
 
   return (
     <SecureViewer

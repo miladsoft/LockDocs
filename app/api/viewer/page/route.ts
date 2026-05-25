@@ -36,7 +36,13 @@ export async function GET(req: Request): Promise<Response> {
   })
 
   if (!share || share.status !== 'ACTIVE') return forbidden()
-  if (share.expiresAt && share.expiresAt < new Date()) return forbidden()
+  if (share.expiresAt && share.expiresAt < new Date()) {
+    await prisma.share.update({ where: { id: share.id }, data: { status: 'EXPIRED' } }).catch(() => {})
+    return err('This link has expired', 410)
+  }
+  if (share.maxViews !== null && share.currentViews > share.maxViews) {
+    return err('Maximum view limit reached', 410)
+  }
   if (pageNumber > share.document.pageCount) return err('Page not found', 404)
 
   const page = await prisma.documentPage.findUnique({
@@ -45,7 +51,7 @@ export async function GET(req: Request): Promise<Response> {
 
   if (!page || !page.isRendered) return err('Page not ready', 503)
 
-  const rawKey = decryptKey(page.storageKey)
+  const rawKey = decryptStorageKey(page.storageKey)
   const pageBuffer = await downloadFile(rawKey)
 
   let imageBuffer = pageBuffer
@@ -77,7 +83,7 @@ export async function GET(req: Request): Promise<Response> {
     page: pageNumber,
   })
 
-  return new Response(imageBuffer, {
+  return new Response(new Uint8Array(imageBuffer), {
     headers: {
       'Content-Type': 'image/jpeg',
       'Cache-Control': 'no-store, no-cache, must-revalidate, private',

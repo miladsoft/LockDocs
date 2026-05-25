@@ -2,7 +2,11 @@ import nodemailer from 'nodemailer'
 
 function getTransport() {
   if (!process.env.SMTP_HOST) {
-    if (process.env.NODE_ENV !== 'production') return null
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+    const isLocalHttp =
+      appUrl.startsWith('http://localhost') || appUrl.startsWith('http://127.0.0.1')
+
+    if (process.env.NODE_ENV !== 'production' || isLocalHttp) return null
     throw new Error('SMTP_HOST is required in production')
   }
 

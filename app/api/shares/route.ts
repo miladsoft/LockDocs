@@ -9,9 +9,9 @@ import { ok, err, unauthorized, notFound } from '@/lib/api/response'
 
 const schema = z.object({
   documentId: z.string().cuid(),
-  recipientName: z.string().min(1).max(100).optional(),
-  recipientEmail: z.string().email().optional(),
-  message: z.string().max(500).optional(),
+  recipientName: z.string().trim().min(1).max(100).optional(),
+  recipientEmail: z.string().trim().email().optional(),
+  message: z.string().trim().max(500).optional(),
   requiresOtp: z.boolean().default(false),
   allowedEmails: z.array(z.string().email()).max(50).default([]),
   allowedIps: z.array(z.string()).max(20).default([]),
@@ -19,7 +19,7 @@ const schema = z.object({
   allowPrint: z.boolean().default(false),
   allowCopy: z.boolean().default(false),
   showWatermark: z.boolean().default(true),
-  expiresAt: z.string().datetime().optional(),
+  expiresAt: z.string().optional(),
   maxViews: z.number().int().min(1).max(10000).optional(),
 })
 
@@ -53,9 +53,13 @@ export async function POST(req: Request): Promise<Response> {
 
   const body = await req.json().catch(() => null)
   const parsed = schema.safeParse(body)
-  if (!parsed.success) return err(parsed.error.errors[0]?.message ?? 'Invalid input')
+  if (!parsed.success) return err(parsed.error.issues[0]?.message ?? 'Invalid input')
 
   const data = parsed.data
+  const expiresAt = data.expiresAt ? new Date(data.expiresAt) : undefined
+  if (data.expiresAt && (!expiresAt || Number.isNaN(expiresAt.getTime()))) {
+    return err('Invalid expiration date')
+  }
 
   // Verify document ownership
   const document = await prisma.document.findFirst({
@@ -79,7 +83,7 @@ export async function POST(req: Request): Promise<Response> {
       allowPrint: data.allowPrint,
       allowCopy: data.allowCopy,
       showWatermark: data.showWatermark,
-      expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
+      expiresAt,
       maxViews: data.maxViews,
       recipientName: data.recipientName,
       recipientEmail: data.recipientEmail,

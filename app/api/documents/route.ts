@@ -143,7 +143,7 @@ export async function POST(req: Request): Promise<Response> {
 
   await enqueuePdfProcessing({
     documentId: document.id,
-    storageKey: rawStorageKey,
+    storageKey: encryptedKey,
     mimeType: file.type,
   })
 

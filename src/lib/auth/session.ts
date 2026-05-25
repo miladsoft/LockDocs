@@ -23,9 +23,12 @@ export async function requireSession(): Promise<JwtPayload> {
 }
 
 export function cookieOptions(maxAge: number) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const isLocalHttp = appUrl.startsWith('http://localhost') || appUrl.startsWith('http://127.0.0.1')
+
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production' && !isLocalHttp,
     sameSite: 'lax' as const,
     path: '/',
     maxAge,

@@ -3,22 +3,29 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install ghostscript for PDF rendering
-RUN apk add --no-cache ghostscript
+ENV CI=true
 
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
+# Install ghostscript for PDF rendering + openssl for Prisma
+RUN apk add --no-cache ghostscript openssl openssl-dev
+
+COPY package.json pnpm-lock.yaml .npmrc pnpm-workspace.yaml ./
+COPY prisma ./prisma
+RUN npm install -g pnpm@10 && \
+    pnpm config set minimum-release-age 0 && \
+    pnpm install --frozen-lockfile
 
 COPY . .
 
-RUN pnpm exec prisma generate && pnpm build
+RUN ./node_modules/.bin/prisma generate && \
+    node -e "try { require('./node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node'); console.log('OK') } catch(e) { console.error('FAIL:', e.message) }" && \
+    pnpm build
 
 # ─── Runner ──────────────────────────────────────────────────
 FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-RUN apk add --no-cache ghostscript curl
+RUN apk add --no-cache ghostscript curl openssl
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { Download } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 import type { DocumentMeta } from '@/types'
 
@@ -135,6 +136,11 @@ export function SecureViewer({ document, token, email, name }: SecureViewerProps
     if (page >= 1 && page <= document.pageCount) setCurrentPage(page)
   }
 
+  const downloadUrl = `/api/viewer/download?${new URLSearchParams({
+    token,
+    sessionId,
+  })}`
+
   return (
     <div
       ref={containerRef}
@@ -150,9 +156,13 @@ export function SecureViewer({ document, token, email, name }: SecureViewerProps
             {currentPage} / {document.pageCount}
           </span>
           {document.allowDownload && (
-            <span className="text-xs bg-indigo-600 text-white px-2 py-0.5 rounded">
-              Download allowed
-            </span>
+            <a
+              href={downloadUrl}
+              className="inline-flex items-center gap-1.5 rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-500"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Download
+            </a>
           )}
         </div>
       </header>

@@ -52,7 +52,7 @@ export default async function AdminPage() {
         <div className="bg-red-950/20 rounded-xl border border-red-900/40 p-5">
           <h2 className="font-semibold text-red-400 mb-4">⚠ Suspicious Activity Alerts</h2>
           <div className="space-y-2">
-            {suspiciousEvents.map((ev) => (
+            {suspiciousEvents.map((ev: typeof suspiciousEvents[number]) => (
               <div key={ev.id} className="flex items-center gap-4 text-sm bg-slate-950/40 rounded-lg px-4 py-3">
                 <span className="text-red-400 font-medium">{ev.type}</span>
                 <span className="text-slate-400">{ev.ipAddress}</span>
@@ -81,7 +81,7 @@ export default async function AdminPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
-            {users.map((u) => (
+            {users.map((u: typeof users[number]) => (
               <tr key={u.id} className="hover:bg-slate-800/30 transition-colors">
                 <td className="px-5 py-3 text-slate-200">{u.name}</td>
                 <td className="px-5 py-3 text-slate-400">{u.email}</td>

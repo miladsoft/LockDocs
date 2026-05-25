@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PUBLIC_PATHS = ['/login', '/register', '/view/', '/api/auth/', '/api/viewer/']
+const PUBLIC_PATHS = [
+  '/login',
+  '/register',
+  '/view/',
+  '/api/auth/',
+  '/api/viewer/',
+  '/api/health',
+]
 
 const ADMIN_PATHS = ['/admin', '/api/admin']
 
