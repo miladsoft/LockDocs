@@ -20,7 +20,7 @@ export async function POST(req: Request): Promise<Response> {
   const body = await req.json().catch(() => null)
   const parsed = schema.safeParse(body)
   if (!parsed.success) {
-    return err(parsed.error.errors[0]?.message ?? 'Invalid input')
+    return err(parsed.error.issues[0]?.message ?? 'Invalid input')
   }
 
   const { name, email, password } = parsed.data

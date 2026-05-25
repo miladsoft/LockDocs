@@ -16,7 +16,7 @@ interface ShareResult {
   shareUrl: string
 }
 
-export function ShareForm({ documentId, documentTitle }: Props) {
+export function ShareForm({ documentId }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -91,7 +91,7 @@ export function ShareForm({ documentId, documentTitle }: Props) {
 
   if (result) {
     return (
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 space-y-4">
+      <div className="space-y-4 rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-emerald-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
             <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,18 +104,18 @@ export function ShareForm({ documentId, documentTitle }: Props) {
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <input
             readOnly
             value={result.shareUrl}
-            className="flex-1 bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 font-mono truncate"
+            className="min-w-0 flex-1 truncate rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 font-mono text-sm text-slate-200"
           />
           <Button onClick={copyLink} variant="outline" size="sm">
             {copied ? 'Copied!' : 'Copy'}
           </Button>
         </div>
 
-        <div className="flex gap-3 pt-2">
+        <div className="flex flex-col gap-3 pt-2 sm:flex-row">
           <Button onClick={() => setResult(null)} variant="ghost" size="sm">
             Create another
           </Button>
@@ -132,7 +132,7 @@ export function ShareForm({ documentId, documentTitle }: Props) {
       {/* Recipient */}
       <div className="bg-slate-900 rounded-xl border border-slate-800 p-5 space-y-4">
         <h2 className="font-semibold text-white">Recipient</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Input
             label="Name (optional)"
             value={form.recipientName}
@@ -162,7 +162,7 @@ export function ShareForm({ documentId, documentTitle }: Props) {
       {/* Permissions */}
       <div className="bg-slate-900 rounded-xl border border-slate-800 p-5 space-y-4">
         <h2 className="font-semibold text-white">Permissions</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 lg:grid-cols-2">
           {([
             ['showWatermark', 'Show watermark', 'Overlay dynamic watermark with recipient info'],
             ['requiresOtp', 'Require OTP', 'Recipient must verify via one-time code'],
@@ -210,7 +210,7 @@ export function ShareForm({ documentId, documentTitle }: Props) {
       {/* Limits */}
       <div className="bg-slate-900 rounded-xl border border-slate-800 p-5 space-y-4">
         <h2 className="font-semibold text-white">Limits</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Input
             label="Expiry date (optional)"
             type="datetime-local"

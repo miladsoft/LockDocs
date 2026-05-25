@@ -10,8 +10,6 @@ const PUBLIC_PATHS = [
   '/api/health',
 ]
 
-const ADMIN_PATHS = ['/admin', '/api/admin']
-
 export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl
 

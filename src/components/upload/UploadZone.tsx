@@ -20,18 +20,18 @@ export function UploadZone() {
   const [progress, setProgress] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
 
+  const handleFileSelect = useCallback((f: File) => {
+    setFile(f)
+    if (!title) setTitle(f.name.replace(/\.[^.]+$/, ''))
+    setError('')
+  }, [title])
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
     const dropped = e.dataTransfer.files[0]
     if (dropped) handleFileSelect(dropped)
-  }, [])
-
-  function handleFileSelect(f: File) {
-    setFile(f)
-    if (!title) setTitle(f.name.replace(/\.[^.]+$/, ''))
-    setError('')
-  }
+  }, [handleFileSelect])
 
   async function handleUpload() {
     if (!file) return setError('Please select a file')
@@ -74,10 +74,10 @@ export function UploadZone() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="max-w-2xl space-y-6">
       {/* Drop zone */}
       <div
-        className={`border-2 border-dashed rounded-xl p-10 text-center transition-all cursor-pointer ${
+        className={`cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-all sm:p-10 ${
           isDragging
             ? 'border-indigo-500 bg-indigo-950/30'
             : file
@@ -105,7 +105,7 @@ export function UploadZone() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <p className="text-sm font-medium text-emerald-400">{file.name}</p>
+            <p className="break-all text-sm font-medium text-emerald-400">{file.name}</p>
             <p className="text-xs text-slate-500">{formatBytes(file.size)}</p>
             <button
               onClick={(e) => { e.stopPropagation(); setFile(null); setTitle('') }}

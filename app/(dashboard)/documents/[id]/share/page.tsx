@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth/session'
 import { prisma } from '@/lib/db/client'
 import { ShareForm } from './ShareForm'
+import Link from 'next/link'
 
 export const metadata = { title: 'Share Document | Vaultix' }
 
@@ -23,12 +24,12 @@ export default async function SharePage({ params }: Props) {
   if (!doc) return notFound()
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
       <div className="mb-8">
         <div className="flex items-center gap-2 text-slate-500 text-sm mb-2">
-          <a href="/documents" className="hover:text-slate-300">Documents</a>
+          <Link href="/documents" className="hover:text-slate-300">Documents</Link>
           <span>/</span>
-          <a href={`/documents/${id}`} className="hover:text-slate-300 truncate max-w-xs">{doc.title}</a>
+          <Link href={`/documents/${id}`} className="hover:text-slate-300 truncate max-w-xs">{doc.title}</Link>
           <span>/</span>
           <span className="text-slate-300">Share</span>
         </div>

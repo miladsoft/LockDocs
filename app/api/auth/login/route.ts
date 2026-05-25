@@ -2,7 +2,7 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/db/client'
-import { signAccessToken, signRefreshToken } from '@/lib/auth/jwt'
+import { signAccessToken } from '@/lib/auth/jwt'
 import { hashToken, generateSecureToken } from '@/lib/crypto/encryption'
 import { checkApiRateLimit } from '@/lib/rate-limit/limiter'
 import { logAudit, extractRequestMeta } from '@/lib/audit/logger'
@@ -61,8 +61,6 @@ export async function POST(req: Request): Promise<Response> {
     role: user.role,
     sessionId,
   })
-  const refreshToken = signRefreshToken({ sub: user.id, sessionId })
-
   const store = await cookies()
   store.set(ACCESS_COOKIE, accessToken, cookieOptions(15 * 60))
   store.set(REFRESH_COOKIE, rawRefresh, cookieOptions(7 * 24 * 60 * 60))

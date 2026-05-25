@@ -45,7 +45,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-4">
+    <div className="flex min-h-dvh items-center justify-center bg-slate-950 p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-2">
@@ -58,7 +58,7 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <div className="bg-slate-900/80 backdrop-blur rounded-2xl border border-slate-800 p-8 shadow-2xl">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-2xl backdrop-blur sm:p-8">
           <h1 className="text-lg font-semibold text-white mb-6">Create your account</h1>
           <form onSubmit={handleRegister} className="space-y-4">
             <Input

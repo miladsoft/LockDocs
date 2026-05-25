@@ -1,8 +1,7 @@
 import { prisma } from '@/lib/db/client'
-import type { AuditAction } from '@prisma/client'
 
 interface AuditEntry {
-  action: AuditAction
+  action: string
   userId?: string
   documentId?: string
   shareId?: string
@@ -19,7 +18,7 @@ interface AuditEntry {
 
 export async function logAudit(entry: AuditEntry): Promise<void> {
   try {
-    await prisma.auditLog.create({ data: entry })
+    await prisma.auditLog.create({ data: entry as never })
   } catch (err) {
     // Audit failures must never crash the app
     console.error('[audit] Failed to write log:', err)

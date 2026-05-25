@@ -34,8 +34,8 @@ export default async function DocumentsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">Documents</h1>
           <p className="text-slate-400 mt-1">{documents.length} document{documents.length !== 1 ? 's' : ''}</p>
@@ -49,7 +49,7 @@ export default async function DocumentsPage() {
       </div>
 
       {documents.length === 0 ? (
-        <div className="bg-slate-900 rounded-xl border border-slate-800 p-16 text-center">
+        <div className="rounded-xl border border-slate-800 bg-slate-900 p-8 text-center sm:p-16">
           <div className="w-14 h-14 bg-slate-800 rounded-xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-7 h-7 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -61,8 +61,9 @@ export default async function DocumentsPage() {
           </Link>
         </div>
       ) : (
-        <div className="bg-slate-900 rounded-xl border border-slate-800">
-          <table className="w-full text-sm">
+        <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] text-sm">
             <thead>
               <tr className="border-b border-slate-800">
                 <th className="text-left px-5 py-3 text-slate-400 font-medium">Title</th>
@@ -75,7 +76,7 @@ export default async function DocumentsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
-              {documents.map((doc) => (
+              {documents.map((doc: typeof documents[number]) => (
                 <tr key={doc.id} className="hover:bg-slate-800/40 transition-colors group">
                   <td className="px-5 py-3">
                     <div>
@@ -112,6 +113,7 @@ export default async function DocumentsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

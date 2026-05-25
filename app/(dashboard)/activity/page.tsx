@@ -36,22 +36,22 @@ export default async function ActivityPage() {
   })
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">Activity Log</h1>
         <p className="text-slate-400 mt-1">Complete audit trail of all document activity</p>
       </div>
 
-      <div className="bg-slate-900 rounded-xl border border-slate-800">
+      <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
         <div className="divide-y divide-slate-800">
           {logs.length === 0 && (
-            <div className="p-8 text-center text-slate-500 text-sm">No activity yet</div>
+            <div className="p-4 sm:p-6 lg:p-8 text-center text-slate-500 text-sm">No activity yet</div>
           )}
-          {logs.map((log) => {
+          {logs.map((log: typeof logs[number]) => {
             const meta = ACTION_LABELS[log.action]
             return (
-              <div key={log.id} className="flex items-center gap-4 px-5 py-3.5">
-                <div className="w-2 h-2 rounded-full bg-slate-700 flex-shrink-0" />
+              <div key={log.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:gap-4">
+                <div className="hidden h-2 w-2 flex-shrink-0 rounded-full bg-slate-700 sm:block" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`text-sm font-medium ${meta?.color ?? 'text-slate-300'}`}>
@@ -64,12 +64,12 @@ export default async function ActivityPage() {
                       <span className="text-xs text-slate-600">p.{log.pageNumber}</span>
                     )}
                   </div>
-                  <div className="flex gap-3 mt-0.5 text-xs text-slate-600">
-                    <span>{log.ipAddress}</span>
-                    {log.share?.recipientEmail && <span>{log.share.recipientEmail}</span>}
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600">
+                    <span className="break-all">{log.ipAddress}</span>
+                    {log.share?.recipientEmail && <span className="break-all">{log.share.recipientEmail}</span>}
                   </div>
                 </div>
-                <span className="text-xs text-slate-600 flex-shrink-0">{formatDate(log.createdAt)}</span>
+                <span className="text-xs text-slate-600 sm:flex-shrink-0">{formatDate(log.createdAt)}</span>
               </div>
             )
           })}

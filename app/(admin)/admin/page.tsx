@@ -26,14 +26,14 @@ export default async function AdminPage() {
   ])
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
         <p className="text-slate-400 mt-1">Platform-wide security and user management</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
           { label: 'Total Users', value: users.length },
           { label: 'Total Documents', value: totalDocs },
@@ -53,11 +53,11 @@ export default async function AdminPage() {
           <h2 className="font-semibold text-red-400 mb-4">⚠ Suspicious Activity Alerts</h2>
           <div className="space-y-2">
             {suspiciousEvents.map((ev: typeof suspiciousEvents[number]) => (
-              <div key={ev.id} className="flex items-center gap-4 text-sm bg-slate-950/40 rounded-lg px-4 py-3">
+              <div key={ev.id} className="flex flex-col gap-2 rounded-lg bg-slate-950/40 px-4 py-3 text-sm sm:flex-row sm:items-center sm:gap-4">
                 <span className="text-red-400 font-medium">{ev.type}</span>
                 <span className="text-slate-400">{ev.ipAddress}</span>
                 {ev.email && <span className="text-slate-400">{ev.email}</span>}
-                <span className="text-slate-600 ml-auto">{formatDate(ev.createdAt)}</span>
+                <span className="text-slate-600 sm:ml-auto">{formatDate(ev.createdAt)}</span>
               </div>
             ))}
           </div>
@@ -65,11 +65,12 @@ export default async function AdminPage() {
       )}
 
       {/* Users table */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800">
+      <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
         <div className="p-5 border-b border-slate-800">
           <h2 className="font-semibold text-white">Users</h2>
         </div>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px] text-sm">
           <thead>
             <tr className="border-b border-slate-800">
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Name</th>
@@ -101,6 +102,7 @@ export default async function AdminPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

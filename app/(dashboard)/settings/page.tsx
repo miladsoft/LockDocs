@@ -18,25 +18,25 @@ export default async function SettingsPage() {
   const storagePercent = Math.min(100, Math.round((Number(user.storageUsed) / Number(user.storageLimit)) * 100))
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="max-w-2xl p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">Settings</h1>
         <p className="text-slate-400 mt-1">Manage your account</p>
       </div>
 
       {/* Profile */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 mb-6">
+      <div className="mb-6 rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
         <h2 className="font-semibold text-white mb-4">Profile</h2>
         <dl className="space-y-3 text-sm">
-          <div className="flex justify-between">
+          <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
             <dt className="text-slate-400">Name</dt>
-            <dd className="text-slate-200">{user.name}</dd>
+            <dd className="break-words text-slate-200 sm:text-right">{user.name}</dd>
           </div>
-          <div className="flex justify-between">
+          <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
             <dt className="text-slate-400">Email</dt>
-            <dd className="text-slate-200">{user.email}</dd>
+            <dd className="break-all text-slate-200 sm:text-right">{user.email}</dd>
           </div>
-          <div className="flex justify-between">
+          <div className="flex items-start justify-between gap-4">
             <dt className="text-slate-400">Role</dt>
             <dd>
               <span className={`px-2 py-0.5 rounded-full text-xs ${user.role === 'ADMIN' ? 'bg-indigo-950 text-indigo-400' : 'bg-slate-800 text-slate-400'}`}>
@@ -48,11 +48,11 @@ export default async function SettingsPage() {
       </div>
 
       {/* Storage */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-6">
+      <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
         <h2 className="font-semibold text-white mb-4">Storage</h2>
-        <div className="flex justify-between text-sm mb-2">
+        <div className="mb-2 flex flex-col gap-1 text-sm sm:flex-row sm:justify-between">
           <span className="text-slate-400">Used</span>
-          <span className="text-slate-300">
+          <span className="text-slate-300 sm:text-right">
             {formatBytes(Number(user.storageUsed))} / {formatBytes(Number(user.storageLimit))}
           </span>
         </div>

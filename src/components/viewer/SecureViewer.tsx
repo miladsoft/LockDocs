@@ -12,13 +12,12 @@ interface SecureViewerProps {
   name?: string
 }
 
-export function SecureViewer({ document, token, email, name }: SecureViewerProps) {
+export function SecureViewer({ document: documentMeta, token, email, name }: SecureViewerProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [isBlurred, setIsBlurred] = useState(false)
   const [sessionId] = useState(() => uuidv4())
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const sessionStart = useRef(Date.now())
 
   // Block context menu, drag, keyboard shortcuts
   useEffect(() => {
@@ -34,27 +33,27 @@ export function SecureViewer({ document, token, email, name }: SecureViewerProps
         e.metaKey && e.key === 'p',
         e.metaKey && e.key === 's',
       ]
-      if (!document.allowPrint && (e.ctrlKey || e.metaKey) && e.key === 'p') {
+      if (!documentMeta.allowPrint && (e.ctrlKey || e.metaKey) && e.key === 'p') {
         e.preventDefault()
         return
       }
-      if (!document.allowCopy && (e.ctrlKey || e.metaKey) && e.key === 'c') {
+      if (!documentMeta.allowCopy && (e.ctrlKey || e.metaKey) && e.key === 'c') {
         e.preventDefault()
         return
       }
       if (forbidden.some(Boolean)) e.preventDefault()
     }
 
-    document.addEventListener?.('contextmenu', block)
+    window.document.addEventListener('contextmenu', block)
     window.addEventListener('keydown', blockKeys)
     window.addEventListener('dragstart', block)
 
     return () => {
-      document.removeEventListener?.('contextmenu', block)
+      window.document.removeEventListener('contextmenu', block)
       window.removeEventListener('keydown', blockKeys)
       window.removeEventListener('dragstart', block)
     }
-  }, [document.allowPrint, document.allowCopy])
+  }, [documentMeta.allowPrint, documentMeta.allowCopy])
 
   // Blur on tab switch
   useEffect(() => {
@@ -76,9 +75,7 @@ export function SecureViewer({ document, token, email, name }: SecureViewerProps
 
     const check = () => {
       const before = performance.now()
-      // eslint-disable-next-line no-console
       console.profile()
-      // eslint-disable-next-line no-console
       console.profileEnd()
       const after = performance.now()
       if (after - before > threshold && !devToolsOpen) {
@@ -133,7 +130,7 @@ export function SecureViewer({ document, token, email, name }: SecureViewerProps
   }, [currentPage, loadPage])
 
   const goTo = (page: number) => {
-    if (page >= 1 && page <= document.pageCount) setCurrentPage(page)
+    if (page >= 1 && page <= documentMeta.pageCount) setCurrentPage(page)
   }
 
   const downloadUrl = `/api/viewer/download?${new URLSearchParams({
@@ -144,18 +141,18 @@ export function SecureViewer({ document, token, email, name }: SecureViewerProps
   return (
     <div
       ref={containerRef}
-      className="flex flex-col h-screen bg-slate-950 select-none"
+      className="flex h-dvh flex-col bg-slate-950 select-none"
       style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
       onContextMenu={(e) => e.preventDefault()}
     >
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800">
-        <span className="text-white font-semibold truncate max-w-xs">{document.title}</span>
-        <div className="flex items-center gap-3 text-slate-400 text-sm">
+      <header className="flex flex-col gap-3 border-b border-slate-800 bg-slate-900 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <span className="min-w-0 max-w-full truncate font-semibold text-white sm:max-w-xs">{documentMeta.title}</span>
+        <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400">
           <span>
-            {currentPage} / {document.pageCount}
+            {currentPage} / {documentMeta.pageCount}
           </span>
-          {document.allowDownload && (
+          {documentMeta.allowDownload && (
             <a
               href={downloadUrl}
               className="inline-flex items-center gap-1.5 rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-500"
@@ -168,7 +165,7 @@ export function SecureViewer({ document, token, email, name }: SecureViewerProps
       </header>
 
       {/* Viewer area */}
-      <main className="flex-1 overflow-auto flex items-center justify-center p-4 relative">
+      <main className="relative flex flex-1 items-center justify-center overflow-auto p-3 sm:p-4">
         {isBlurred && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-xl">
             <p className="text-white text-lg font-medium">Click to resume viewing</p>
@@ -182,8 +179,7 @@ export function SecureViewer({ document, token, email, name }: SecureViewerProps
         >
           <canvas
             ref={canvasRef}
-            className="max-w-full max-h-[calc(100vh-160px)] object-contain"
-            style={{ imageRendering: 'high-quality' }}
+            className="max-h-[calc(100dvh-210px)] max-w-full object-contain sm:max-h-[calc(100dvh-160px)]"
           />
           {/* Anti-screenshot overlay — transparent but breaks copy-paste */}
           <div
@@ -194,7 +190,7 @@ export function SecureViewer({ document, token, email, name }: SecureViewerProps
       </main>
 
       {/* Navigation */}
-      <footer className="flex items-center justify-center gap-4 px-4 py-3 bg-slate-900 border-t border-slate-800">
+      <footer className="flex flex-wrap items-center justify-center gap-2 border-t border-slate-800 bg-slate-900 px-3 py-3 sm:gap-4 sm:px-4">
         <button
           onClick={() => goTo(1)}
           disabled={currentPage === 1}
@@ -214,24 +210,24 @@ export function SecureViewer({ document, token, email, name }: SecureViewerProps
           <input
             type="number"
             min={1}
-            max={document.pageCount}
+            max={documentMeta.pageCount}
             value={currentPage}
             onChange={(e) => goTo(parseInt(e.target.value) || 1)}
             className="w-14 text-center bg-slate-800 border border-slate-700 text-white rounded px-2 py-1 text-sm"
           />
-          <span className="text-slate-500 text-sm">/ {document.pageCount}</span>
+          <span className="text-slate-500 text-sm">/ {documentMeta.pageCount}</span>
         </div>
 
         <button
           onClick={() => goTo(currentPage + 1)}
-          disabled={currentPage === document.pageCount}
+          disabled={currentPage === documentMeta.pageCount}
           className="px-3 py-1.5 rounded bg-slate-800 text-slate-300 text-sm disabled:opacity-40 hover:bg-slate-700 transition-colors"
         >
           Next &#8250;
         </button>
         <button
-          onClick={() => goTo(document.pageCount)}
-          disabled={currentPage === document.pageCount}
+          onClick={() => goTo(documentMeta.pageCount)}
+          disabled={currentPage === documentMeta.pageCount}
           className="px-3 py-1.5 rounded bg-slate-800 text-slate-300 text-sm disabled:opacity-40 hover:bg-slate-700 transition-colors"
         >
           Last &#187;

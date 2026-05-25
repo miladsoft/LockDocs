@@ -54,10 +54,19 @@ export default async function DocumentPage({ params }: Props) {
     DELETED:    'bg-red-950 text-red-400',
   }
 
+  const detailItems = [
+    ['File', doc.originalFilename],
+    ['Size', formatBytes(Number(doc.fileSize))],
+    ['Type', doc.mimeType],
+    ['Pages', doc.pageCount || '-'],
+    ['Uploaded', formatDate(doc.createdAt)],
+    ['Checksum', doc.checksum ? doc.checksum.slice(0, 16) + '...' : '-'],
+  ] satisfies Array<[string, string | number]>
+
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
       {/* Header */}
-      <div className="flex items-start justify-between mb-8 gap-4">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 text-slate-500 text-sm mb-2">
             <Link href="/documents" className="hover:text-slate-300">Documents</Link>
@@ -78,15 +87,8 @@ export default async function DocumentPage({ params }: Props) {
           {/* Metadata */}
           <div className="bg-slate-900 rounded-xl border border-slate-800 p-5">
             <h2 className="font-semibold text-white mb-4">Details</h2>
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-              {[
-                ['File', doc.originalFilename],
-                ['Size', formatBytes(Number(doc.fileSize))],
-                ['Type', doc.mimeType],
-                ['Pages', doc.pageCount || '—'],
-                ['Uploaded', formatDate(doc.createdAt)],
-                ['Checksum', doc.checksum ? doc.checksum.slice(0, 16) + '…' : '—'],
-              ].map(([label, value]) => (
+            <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+              {detailItems.map(([label, value]) => (
                 <div key={String(label)}>
                   <dt className="text-slate-500">{label}</dt>
                   <dd className="text-slate-200 font-mono text-xs mt-0.5 truncate">{value}</dd>
@@ -98,7 +100,7 @@ export default async function DocumentPage({ params }: Props) {
               <div className="mt-4 pt-4 border-t border-slate-800">
                 <p className="text-slate-500 text-xs mb-2">Tags</p>
                 <div className="flex flex-wrap gap-1">
-                  {doc.tags.map((tag) => (
+                  {doc.tags.map((tag: string) => (
                     <span key={tag} className="px-2 py-0.5 bg-slate-800 text-slate-300 text-xs rounded-full">
                       {tag}
                     </span>
@@ -113,7 +115,7 @@ export default async function DocumentPage({ params }: Props) {
             <div className="bg-slate-900 rounded-xl border border-slate-800 p-5">
               <h2 className="font-semibold text-white mb-3">Pages ({doc.pages.length})</h2>
               <div className="flex flex-wrap gap-2">
-                {doc.pages.map((p) => (
+                {doc.pages.map((p: typeof doc.pages[number]) => (
                   <span
                     key={p.pageNumber}
                     className={`w-8 h-8 rounded text-xs flex items-center justify-center ${
@@ -137,8 +139,8 @@ export default async function DocumentPage({ params }: Props) {
               <p className="px-5 py-6 text-slate-500 text-sm text-center">No active shares</p>
             ) : (
               <div className="divide-y divide-slate-800">
-                {doc.shares.map((share) => (
-                  <div key={share.id} className="px-5 py-3 flex items-center justify-between gap-4">
+                {doc.shares.map((share: typeof doc.shares[number]) => (
+                  <div key={share.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <p className="text-sm text-slate-200 truncate">
                         {share.recipientEmail ?? 'Anyone with link'}
@@ -148,7 +150,7 @@ export default async function DocumentPage({ params }: Props) {
                         {share.expiresAt ? ` · expires ${formatDate(share.expiresAt)}` : ''}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0 text-xs">
+                    <div className="flex flex-wrap items-center gap-2 text-xs sm:flex-shrink-0">
                       {share.showWatermark && <span className="text-slate-500">Watermark</span>}
                       {share.requiresOtp && <span className="text-amber-500">OTP</span>}
                       {share.allowDownload && <span className="text-indigo-400">Download</span>}

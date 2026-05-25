@@ -33,7 +33,6 @@ export default function LoginPage() {
         body: JSON.stringify(form),
       })
       if (res.ok) {
-        const data = await res.json()
         router.push('/dashboard')
         router.refresh()
       } else {
@@ -47,7 +46,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-4">
+    <div className="flex min-h-dvh items-center justify-center bg-slate-950 p-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -62,7 +61,7 @@ export default function LoginPage() {
           <p className="text-slate-400 text-sm">Secure Document Sharing Platform</p>
         </div>
 
-        <div className="bg-slate-900/80 backdrop-blur rounded-2xl border border-slate-800 p-8 shadow-2xl">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-2xl backdrop-blur sm:p-8">
           <h1 className="text-lg font-semibold text-white mb-6">Sign in to your account</h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">

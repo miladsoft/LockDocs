@@ -4,39 +4,46 @@ services:
   # ─── PostgreSQL ─────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
+    container_name: vaultix-postgres
     restart: unless-stopped
+    expose:
+      - "5432"
     environment:
-      POSTGRES_DB: vaultix
-      POSTGRES_USER: vaultix
+      POSTGRES_DB: ${POSTGRES_DB:-vaultix}
+      POSTGRES_USER: ${POSTGRES_USER:-vaultix}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U vaultix']
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vaultix}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - internal
+      - vaultix-network
 
   # ─── Redis ──────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
+    container_name: vaultix-redis
     restart: unless-stopped
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
     volumes:
       - redis_data:/data
+    expose:
+      - "6379"
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeme}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - internal
+      - vaultix-network
 
   # ─── MinIO (S3-compatible storage) ──────────────────────────
   minio:
     image: minio/minio:latest
+    container_name: vaultix-minio
     restart: unless-stopped
     command: server /data --console-address ':9001'
     environment:
@@ -44,15 +51,16 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-changeme_minio}
     volumes:
       - minio_data:/data
-    ports:
-      - '9002:9001'  # Console only — not exposed to internet
+    expose:
+      - "9000"
+      - "9001"
     healthcheck:
-      test: ['CMD', 'mc', 'ready', 'local']
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
     networks:
-      - internal
+      - vaultix-network
 
   # ─── Next.js App ────────────────────────────────────────────
   app:
@@ -60,17 +68,40 @@ services:
       context: .
       dockerfile: Dockerfile
       target: runner
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://vaultix.yourdomain.com}
+    container_name: vaultix-app
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - .env
     environment:
+      # Nginx Proxy Configuration
+      VIRTUAL_HOST: ${DOMAIN:-file.sbc.om}
+      VIRTUAL_PORT: 3000
+      VIRTUAL_PROTO: http
+      VIRTUAL_NETWORK: proxy
+      LETSENCRYPT_HOST: ${DOMAIN:-file.sbc.om}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL:-admin@sbc.om}
+
+      # Application
       NODE_ENV: production
-      DATABASE_URL: postgresql://vaultix:${POSTGRES_PASSWORD:-changeme}@postgres:5432/vaultix
+      PORT: 3000
+      NEXT_PUBLIC_APP_URL: https://${DOMAIN:-file.sbc.om}
+
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-vaultix}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-vaultix}
+
+      # Redis
       REDIS_URL: redis://:${REDIS_PASSWORD:-changeme}@redis:6379
+
+      # MinIO / S3
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: ${MINIO_ROOT_USER:-vaultix_admin}
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme_minio}
-    ports:
-      - '3000:3000'
+      S3_BUCKET: ${S3_BUCKET:-vaultix-documents}
+      S3_REGION: ${S3_REGION:-us-east-1}
+    expose:
+      - "3000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -79,83 +110,80 @@ services:
       minio:
         condition: service_healthy
     healthcheck:
-      test: ['CMD-SHELL', 'curl -f http://localhost:3000/api/health || exit 1']
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
     networks:
-      - internal
-      - external
+      - vaultix-network
+      - proxy
 
   # ─── PDF Processing Worker ───────────────────────────────────
   worker-pdf:
     build:
       context: .
       dockerfile: Dockerfile.worker
+    container_name: vaultix-worker-pdf
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - .env
     environment:
       WORKER_TYPE: pdf-processor
-      DATABASE_URL: postgresql://vaultix:${POSTGRES_PASSWORD:-changeme}@postgres:5432/vaultix
+      DATABASE_URL: postgresql://${POSTGRES_USER:-vaultix}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-vaultix}
       REDIS_URL: redis://:${REDIS_PASSWORD:-changeme}@redis:6379
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: ${MINIO_ROOT_USER:-vaultix_admin}
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme_minio}
+      S3_BUCKET: ${S3_BUCKET:-vaultix-documents}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
-      - internal
+      - vaultix-network
 
   # ─── Cleanup Worker ──────────────────────────────────────────
   worker-cleanup:
     build:
       context: .
       dockerfile: Dockerfile.worker
+    container_name: vaultix-worker-cleanup
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - .env
     environment:
       WORKER_TYPE: cleanup
-      DATABASE_URL: postgresql://vaultix:${POSTGRES_PASSWORD:-changeme}@postgres:5432/vaultix
+      DATABASE_URL: postgresql://${POSTGRES_USER:-vaultix}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-vaultix}
       REDIS_URL: redis://:${REDIS_PASSWORD:-changeme}@redis:6379
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: ${MINIO_ROOT_USER:-vaultix_admin}
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme_minio}
+      S3_BUCKET: ${S3_BUCKET:-vaultix-documents}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
-      - internal
+      - vaultix-network
 
-  # ─── Nginx Reverse Proxy ─────────────────────────────────────
-  nginx:
-    image: nginx:alpine
-    restart: unless-stopped
-    ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - nginx_cache:/var/cache/nginx
-    depends_on:
-      - app
-    networks:
-      - external
-      - internal
+networks:
+  vaultix-network:
+    external: false
+    name: vaultix-network
+  proxy:
+    external: true
+    name: proxy
 
 volumes:
   postgres_data:
+    driver: local
+    name: vaultix-postgres-data
   redis_data:
+    driver: local
+    name: vaultix-redis-data
   minio_data:
-  nginx_cache:
-
-networks:
-  internal:
-    driver: bridge
-  external:
-    driver: bridge
+    driver: local
+    name: vaultix-minio-data

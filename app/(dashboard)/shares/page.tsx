@@ -19,14 +19,15 @@ export default async function SharesPage() {
   })
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">Shares</h1>
         <p className="text-slate-400 mt-1">Manage all document share links and recipients</p>
       </div>
 
-      <div className="bg-slate-900 rounded-xl border border-slate-800">
-        <table className="w-full text-sm">
+      <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px] text-sm">
           <thead>
             <tr className="border-b border-slate-800">
               <th className="text-left px-5 py-3 text-slate-400 font-medium">Document</th>
@@ -45,7 +46,7 @@ export default async function SharesPage() {
                 </td>
               </tr>
             )}
-            {shares.map((share) => (
+            {shares.map((share: typeof shares[number]) => (
               <tr key={share.id} className="hover:bg-slate-800/50 transition-colors">
                 <td className="px-5 py-3 text-slate-200 truncate max-w-xs">{share.document.title}</td>
                 <td className="px-5 py-3 text-slate-400 truncate">
@@ -71,6 +72,7 @@ export default async function SharesPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

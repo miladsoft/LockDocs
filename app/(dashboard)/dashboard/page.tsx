@@ -3,6 +3,12 @@ import { prisma } from '@/lib/db/client'
 import { formatBytes, formatDate } from '@/lib/utils'
 import Link from 'next/link'
 
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
+
+function getRecentViewCutoff() {
+  return new Date(Date.now() - THIRTY_DAYS_MS)
+}
+
 export default async function DashboardPage() {
   const session = await getSession()
   if (!session) return null
@@ -22,7 +28,7 @@ export default async function DashboardPage() {
       prisma.document.count({ where: { userId: session.sub, deletedAt: null } }),
       prisma.share.count({ where: { document: { userId: session.sub }, status: 'ACTIVE' } }),
       prisma.auditLog.count({
-        where: { userId: session.sub, action: 'DOCUMENT_VIEWED', createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
+        where: { userId: session.sub, action: 'DOCUMENT_VIEWED', createdAt: { gte: getRecentViewCutoff() } },
       }),
     ]),
   ])
@@ -40,14 +46,14 @@ export default async function DashboardPage() {
   ]
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">Welcome back, {user?.name?.split(' ')[0]}</h1>
         <p className="text-slate-400 mt-1">Here&apos;s an overview of your document security activity</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-8">
         {statCards.map((card) => (
           <div key={card.label} className="bg-slate-900 rounded-xl p-5 border border-slate-800">
             <p className="text-slate-400 text-sm">{card.label}</p>
@@ -80,15 +86,15 @@ export default async function DashboardPage() {
         </div>
         <div className="divide-y divide-slate-800">
           {recentDocuments.length === 0 ? (
-            <div className="p-8 text-center">
+            <div className="p-4 sm:p-6 lg:p-8 text-center">
               <p className="text-slate-500 text-sm mb-4">No documents yet</p>
               <Link href="/upload" className="text-indigo-400 hover:text-indigo-300 text-sm">
                 Upload your first document →
               </Link>
             </div>
           ) : (
-            recentDocuments.map((doc) => (
-              <div key={doc.id} className="flex items-center justify-between px-5 py-3">
+            recentDocuments.map((doc: typeof recentDocuments[number]) => (
+              <div key={doc.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex-1 min-w-0">
                   <Link
                     href={`/documents/${doc.id}`}
@@ -98,7 +104,7 @@ export default async function DashboardPage() {
                   </Link>
                   <span className="text-xs text-slate-500">{formatDate(doc.createdAt)} · {formatBytes(Number(doc.fileSize))}</span>
                 </div>
-                <div className="flex items-center gap-3 ml-4">
+                <div className="flex flex-wrap items-center gap-3 sm:ml-4">
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
                     doc.status === 'READY' ? 'bg-emerald-950 text-emerald-400' :
                     doc.status === 'PROCESSING' ? 'bg-amber-950 text-amber-400' :

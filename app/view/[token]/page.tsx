@@ -1,7 +1,7 @@
 import { hashToken } from '@/lib/crypto/encryption'
 import { prisma } from '@/lib/db/client'
 import { SecureViewer } from '@/components/viewer/SecureViewer'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 
 interface Props {

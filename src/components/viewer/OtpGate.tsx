@@ -47,8 +47,8 @@ export function OtpGate({ email, onVerified, token }: OtpGateProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
-      <div className="w-full max-w-sm bg-slate-900 rounded-2xl p-8 border border-slate-800 shadow-2xl">
+    <div className="flex min-h-dvh items-center justify-center bg-slate-950 p-4">
+      <div className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-2xl sm:p-8">
         <div className="mb-6 text-center">
           <div className="w-14 h-14 bg-indigo-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-7 h-7 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -56,8 +56,8 @@ export function OtpGate({ email, onVerified, token }: OtpGateProps) {
             </svg>
           </div>
           <h1 className="text-xl font-semibold text-white">Verify your identity</h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Enter the 6-digit code sent to <span className="text-slate-200">{email}</span>
+          <p className="mt-1 text-sm text-slate-400">
+            Enter the 6-digit code sent to <span className="break-all text-slate-200">{email}</span>
           </p>
         </div>
 

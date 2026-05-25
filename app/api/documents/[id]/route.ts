@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db/client'
 import { deleteFile } from '@/lib/storage/s3'
 import { decryptStorageKey } from '@/lib/crypto/encryption'
 import { logAudit, extractRequestMeta } from '@/lib/audit/logger'
-import { ok, err, unauthorized, forbidden, notFound } from '@/lib/api/response'
+import { ok, unauthorized, notFound } from '@/lib/api/response'
 
 interface Params {
   params: Promise<{ id: string }>
@@ -68,8 +68,8 @@ export async function DELETE(req: Request, { params }: Params): Promise<Response
   })
 
   // Delete from storage (fire-and-forget)
-  decryptStorageKey(document.storageKey)
-    .then((key) => deleteFile(key))
+  Promise.resolve()
+    .then(() => deleteFile(decryptStorageKey(document.storageKey)))
     .catch(console.error)
 
   await logAudit({
