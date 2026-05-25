@@ -15,7 +15,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vaultix}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vaultix} -d ${POSTGRES_DB:-vaultix}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -69,7 +69,7 @@ services:
       dockerfile: Dockerfile
       target: runner
       args:
-        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://vaultix.yourdomain.com}
+        NEXT_PUBLIC_APP_URL: https://${DOMAIN:-file.sbc.om}
     container_name: vaultix-app
     restart: unless-stopped
     env_file:
@@ -90,6 +90,10 @@ services:
 
       # Database
       DATABASE_URL: postgresql://${POSTGRES_USER:-vaultix}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-vaultix}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-vaultix}
+      POSTGRES_DB: ${POSTGRES_DB:-vaultix}
 
       # Redis
       REDIS_URL: redis://:${REDIS_PASSWORD:-changeme}@redis:6379

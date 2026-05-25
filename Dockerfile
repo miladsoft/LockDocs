@@ -5,6 +5,9 @@ WORKDIR /app
 
 ENV CI=true
 
+ARG NEXT_PUBLIC_APP_URL=https://file.sbc.om
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+
 # Install ghostscript for PDF rendering + openssl for Prisma
 RUN apk add --no-cache ghostscript openssl openssl-dev
 
@@ -16,7 +19,6 @@ RUN npm install -g pnpm@10 && \
 
 COPY . .
 
-# Generate Prisma client + build app
 RUN ./node_modules/.bin/prisma generate && \
     node -e "try { require('./node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node'); console.log('OK') } catch(e) { console.error('FAIL:', e.message) }" && \
     pnpm build
@@ -31,24 +33,26 @@ RUN apk add --no-cache ghostscript curl openssl postgresql-client
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Next.js standalone output (includes runtime node_modules with bcryptjs, @prisma/client, etc.)
+# Next.js standalone output (includes traced runtime node_modules)
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Prisma schema + compiled seed
+# Prisma schema + pre-built seed script
 COPY --from=builder /app/prisma ./prisma
 
-# Prisma CLI + migration engine (not bundled in standalone output)
+# Prisma CLI + schema-engine (needed for db push at startup)
 COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
 
-# Startup entrypoint
+# bcryptjs for seed (may not be included in standalone trace)
+COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
+
+# Startup script
 COPY scripts/entrypoint.sh ./entrypoint.sh
 
 RUN chown -R nextjs:nodejs /app && \
