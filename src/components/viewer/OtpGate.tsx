@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { KeyRound, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -47,13 +48,11 @@ export function OtpGate({ email, onVerified, token }: OtpGateProps) {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-slate-950 p-4">
-      <div className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-2xl sm:p-8">
+    <div className="flex min-h-dvh items-center justify-center app-bg p-4">
+      <div className="surface w-full max-w-sm rounded-2xl p-5 shadow-2xl sm:p-8">
         <div className="mb-6 text-center">
-          <div className="w-14 h-14 bg-indigo-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <svg className="w-7 h-7 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-400/10 text-teal-300 ring-1 ring-teal-400/20">
+            <KeyRound className="h-7 w-7" />
           </div>
           <h1 className="text-xl font-semibold text-white">Verify your identity</h1>
           <p className="mt-1 text-sm text-slate-400">
@@ -69,7 +68,7 @@ export function OtpGate({ email, onVerified, token }: OtpGateProps) {
             maxLength={6}
             placeholder="000000"
             error={error}
-            className="text-center tracking-[0.5em] text-lg bg-slate-800 border-slate-700 text-white"
+            className="bg-slate-950/55 text-center text-lg tracking-[0.5em] text-white"
             onKeyDown={(e) => e.key === 'Enter' && code.length === 6 && verify()}
           />
 
@@ -80,10 +79,14 @@ export function OtpGate({ email, onVerified, token }: OtpGateProps) {
           <button
             onClick={resend}
             disabled={!sent}
-            className="w-full text-sm text-slate-500 hover:text-slate-300 transition-colors disabled:opacity-50"
+            className="w-full text-sm text-slate-500 transition-colors hover:text-slate-300 disabled:opacity-50 focus-ring"
           >
             {sent ? "Didn't receive a code? Resend" : 'Sending…'}
           </button>
+          <div className="flex items-center justify-center gap-2 pt-2 text-xs text-slate-600">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Session verification required
+          </div>
         </div>
       </div>
     </div>

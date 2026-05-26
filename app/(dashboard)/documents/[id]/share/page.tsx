@@ -1,8 +1,10 @@
+import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
+import { ArrowLeft, Clock } from 'lucide-react'
 import { getSession } from '@/lib/auth/session'
 import { prisma } from '@/lib/db/client'
 import { ShareForm } from './ShareForm'
-import Link from 'next/link'
+import { PageHeader, PageShell, Surface } from '@/components/ui/surface'
 
 export const metadata = { title: 'Share Document | Vaultix' }
 
@@ -24,27 +26,31 @@ export default async function SharePage({ params }: Props) {
   if (!doc) return notFound()
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
-      <div className="mb-8">
-        <div className="flex items-center gap-2 text-slate-500 text-sm mb-2">
-          <Link href="/documents" className="hover:text-slate-300">Documents</Link>
-          <span>/</span>
-          <Link href={`/documents/${id}`} className="hover:text-slate-300 truncate max-w-xs">{doc.title}</Link>
-          <span>/</span>
-          <span className="text-slate-300">Share</span>
-        </div>
-        <h1 className="text-2xl font-bold text-white">Share Document</h1>
-        <p className="text-slate-400 mt-1">Configure access permissions and generate a secure link</p>
+    <PageShell className="max-w-6xl">
+      <div className="mb-5">
+        <Link href={`/documents/${id}`} className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-teal-300 focus-ring">
+          <ArrowLeft className="h-4 w-4" />
+          Back to document
+        </Link>
       </div>
 
+      <PageHeader
+        eyebrow="Secure Sharing"
+        title="Share Document"
+        description={`Configure recipient identity, permissions and access limits for "${doc.title}".`}
+      />
+
       {doc.status !== 'READY' ? (
-        <div className="bg-amber-950/30 border border-amber-900/50 rounded-xl p-6 text-center">
-          <p className="text-amber-400 font-medium">Document is still processing</p>
-          <p className="text-slate-500 text-sm mt-1">Please wait until status is READY before sharing</p>
-        </div>
+        <Surface className="mx-auto max-w-xl p-8 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/20">
+            <Clock className="h-7 w-7" />
+          </div>
+          <p className="font-semibold text-amber-300">Document is still processing</p>
+          <p className="mt-2 text-sm text-slate-500">Please wait until status is READY before sharing.</p>
+        </Surface>
       ) : (
         <ShareForm documentId={doc.id} documentTitle={doc.title} />
       )}
-    </div>
+    </PageShell>
   )
 }

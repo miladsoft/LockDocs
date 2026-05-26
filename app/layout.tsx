@@ -16,7 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="robots" content="noindex, nofollow" />
       </head>
-      <body className="min-h-full bg-slate-950 text-slate-100 antialiased">{children}</body>
+      <body className="min-h-full app-bg text-slate-100 antialiased">{children}</body>
     </html>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Download } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, FileText, Maximize2, ShieldAlert } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 import type { DocumentMeta } from '@/types'
 
@@ -141,21 +141,36 @@ export function SecureViewer({ document: documentMeta, token, email, name }: Sec
   return (
     <div
       ref={containerRef}
-      className="flex h-dvh flex-col bg-slate-950 select-none"
+      className="flex h-dvh select-none bg-slate-950"
       style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {/* Header */}
-      <header className="flex flex-col gap-3 border-b border-slate-800 bg-slate-900 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <span className="min-w-0 max-w-full truncate font-semibold text-white sm:max-w-xs">{documentMeta.title}</span>
-        <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400">
-          <span>
-            {currentPage} / {documentMeta.pageCount}
+      <header className="flex flex-col gap-3 border-b border-slate-800/80 bg-slate-950/90 px-4 py-3 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-400/10 text-teal-300 ring-1 ring-teal-400/20">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <span className="block truncate font-semibold text-white">{documentMeta.title}</span>
+            <span className="text-xs text-slate-500">Session-bound secure preview</span>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
+          <span className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs">
+            Page {currentPage} / {documentMeta.pageCount}
           </span>
+          <button
+            type="button"
+            onClick={() => containerRef.current?.requestFullscreen?.()}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 text-slate-300 transition-colors hover:bg-slate-800 focus-ring"
+            aria-label="Fullscreen"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
           {documentMeta.allowDownload && (
             <a
               href={downloadUrl}
-              className="inline-flex items-center gap-1.5 rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-500"
+              className="inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-teal-500 px-3 text-xs font-medium text-slate-950 transition-colors hover:bg-teal-400 focus-ring"
             >
               <Download className="h-3.5 w-3.5" />
               Download
@@ -164,22 +179,28 @@ export function SecureViewer({ document: documentMeta, token, email, name }: Sec
         </div>
       </header>
 
-      {/* Viewer area */}
-      <main className="relative flex flex-1 items-center justify-center overflow-auto p-3 sm:p-4">
+      <main className="relative flex flex-1 items-center justify-center overflow-auto bg-[radial-gradient(circle_at_center,rgba(15,23,42,0.9),#020617_72%)] p-3 sm:p-5">
         {isBlurred && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-xl">
-            <p className="text-white text-lg font-medium">Click to resume viewing</p>
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-xl">
+            <div className="max-w-sm rounded-2xl border border-slate-800 bg-slate-900 p-6 text-center shadow-2xl">
+              <ShieldAlert className="mx-auto mb-3 h-9 w-9 text-amber-300" />
+              <p className="text-lg font-semibold text-white">Viewing paused</p>
+              <p className="mt-1 text-sm text-slate-500">The document is hidden while this tab is inactive.</p>
+              <button onClick={() => setIsBlurred(false)} className="mt-5 min-h-10 rounded-lg bg-teal-500 px-4 text-sm font-medium text-slate-950 hover:bg-teal-400 focus-ring">
+                Resume viewing
+              </button>
+            </div>
           </div>
         )}
 
         <div
-          className="relative shadow-2xl"
+          className="relative rounded-lg bg-white shadow-2xl shadow-slate-950/60 ring-1 ring-slate-700/70"
           style={{ pointerEvents: isBlurred ? 'none' : 'auto' }}
           onClick={() => setIsBlurred(false)}
         >
           <canvas
             ref={canvasRef}
-            className="max-h-[calc(100dvh-210px)] max-w-full object-contain sm:max-h-[calc(100dvh-160px)]"
+            className="max-h-[calc(100dvh-226px)] max-w-full rounded-lg object-contain sm:max-h-[calc(100dvh-170px)]"
           />
           {/* Anti-screenshot overlay — transparent but breaks copy-paste */}
           <div
@@ -189,21 +210,21 @@ export function SecureViewer({ document: documentMeta, token, email, name }: Sec
         </div>
       </main>
 
-      {/* Navigation */}
-      <footer className="flex flex-wrap items-center justify-center gap-2 border-t border-slate-800 bg-slate-900 px-3 py-3 sm:gap-4 sm:px-4">
+      <footer className="flex flex-wrap items-center justify-center gap-2 border-t border-slate-800/80 bg-slate-950/90 px-3 py-3 backdrop-blur-xl sm:gap-3 sm:px-4">
         <button
           onClick={() => goTo(1)}
           disabled={currentPage === 1}
-          className="px-3 py-1.5 rounded bg-slate-800 text-slate-300 text-sm disabled:opacity-40 hover:bg-slate-700 transition-colors"
+          className="min-h-9 rounded-lg border border-slate-800 bg-slate-900 px-3 text-sm text-slate-300 transition-colors hover:bg-slate-800 disabled:opacity-40 focus-ring"
         >
-          &#171; First
+          First
         </button>
         <button
           onClick={() => goTo(currentPage - 1)}
           disabled={currentPage === 1}
-          className="px-3 py-1.5 rounded bg-slate-800 text-slate-300 text-sm disabled:opacity-40 hover:bg-slate-700 transition-colors"
+          className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 px-3 text-sm text-slate-300 transition-colors hover:bg-slate-800 disabled:opacity-40 focus-ring"
         >
-          &#8249; Prev
+          <ChevronLeft className="h-4 w-4" />
+          Prev
         </button>
 
         <div className="flex items-center gap-1">
@@ -213,7 +234,7 @@ export function SecureViewer({ document: documentMeta, token, email, name }: Sec
             max={documentMeta.pageCount}
             value={currentPage}
             onChange={(e) => goTo(parseInt(e.target.value) || 1)}
-            className="w-14 text-center bg-slate-800 border border-slate-700 text-white rounded px-2 py-1 text-sm"
+            className="h-9 w-16 rounded-lg border border-slate-700 bg-slate-900 px-2 text-center text-sm text-white focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400/60"
           />
           <span className="text-slate-500 text-sm">/ {documentMeta.pageCount}</span>
         </div>
@@ -221,16 +242,17 @@ export function SecureViewer({ document: documentMeta, token, email, name }: Sec
         <button
           onClick={() => goTo(currentPage + 1)}
           disabled={currentPage === documentMeta.pageCount}
-          className="px-3 py-1.5 rounded bg-slate-800 text-slate-300 text-sm disabled:opacity-40 hover:bg-slate-700 transition-colors"
+          className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 px-3 text-sm text-slate-300 transition-colors hover:bg-slate-800 disabled:opacity-40 focus-ring"
         >
-          Next &#8250;
+          Next
+          <ChevronRight className="h-4 w-4" />
         </button>
         <button
           onClick={() => goTo(documentMeta.pageCount)}
           disabled={currentPage === documentMeta.pageCount}
-          className="px-3 py-1.5 rounded bg-slate-800 text-slate-300 text-sm disabled:opacity-40 hover:bg-slate-700 transition-colors"
+          className="min-h-9 rounded-lg border border-slate-800 bg-slate-900 px-3 text-sm text-slate-300 transition-colors hover:bg-slate-800 disabled:opacity-40 focus-ring"
         >
-          Last &#187;
+          Last
         </button>
       </footer>
     </div>

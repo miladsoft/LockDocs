@@ -1,7 +1,9 @@
+import Link from 'next/link'
+import { Activity, Database, FileText, Share2, Upload } from 'lucide-react'
 import { getSession } from '@/lib/auth/session'
 import { prisma } from '@/lib/db/client'
 import { formatBytes, formatDate } from '@/lib/utils'
-import Link from 'next/link'
+import { EmptyState, MetricCard, PageHeader, PageShell, StatusBadge, Surface } from '@/components/ui/surface'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -39,85 +41,93 @@ export default async function DashboardPage() {
   const storagePercent = Math.min(100, Math.round((storageUsed / storageLimit) * 100))
 
   const statCards = [
-    { label: 'Documents', value: docCount, color: 'indigo' },
-    { label: 'Active Shares', value: activeShares, color: 'emerald' },
-    { label: 'Views (30d)', value: recentViews, color: 'violet' },
-    { label: 'Storage Used', value: `${storagePercent}%`, color: 'amber' },
+    { label: 'Documents', value: docCount, helper: 'Encrypted assets', icon: FileText, tone: 'teal' as const },
+    { label: 'Active Shares', value: activeShares, helper: 'Live access links', icon: Share2, tone: 'emerald' as const },
+    { label: 'Views (30d)', value: recentViews, helper: 'Tracked events', icon: Activity, tone: 'indigo' as const },
+    { label: 'Storage Used', value: `${storagePercent}%`, helper: formatBytes(storageUsed), icon: Database, tone: 'amber' as const },
   ]
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Welcome back, {user?.name?.split(' ')[0]}</h1>
-        <p className="text-slate-400 mt-1">Here&apos;s an overview of your document security activity</p>
-      </div>
+    <PageShell>
+      <PageHeader
+        eyebrow="Security Command Center"
+        title={`Welcome back${user?.name ? `, ${user.name.split(' ')[0]}` : ''}`}
+        description="Monitor protected documents, active shares, recent viewing activity and storage usage from one workspace."
+        action={
+          <Link
+            href="/upload"
+            className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-teal-500 px-4 text-sm font-medium text-slate-950 transition-colors hover:bg-teal-400 focus-ring"
+          >
+            <Upload className="h-4 w-4" />
+            Upload
+          </Link>
+        }
+      />
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-8">
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {statCards.map((card) => (
-          <div key={card.label} className="bg-slate-900 rounded-xl p-5 border border-slate-800">
-            <p className="text-slate-400 text-sm">{card.label}</p>
-            <p className="text-3xl font-bold text-white mt-1">{card.value}</p>
-          </div>
+          <MetricCard key={card.label} {...card} />
         ))}
       </div>
 
-      {/* Storage Bar */}
-      <div className="bg-slate-900 rounded-xl p-5 border border-slate-800 mb-8">
-        <div className="flex justify-between text-sm mb-2">
-          <span className="text-slate-400">Storage</span>
-          <span className="text-slate-300">
-            {formatBytes(storageUsed)} / {formatBytes(user?.storageLimit ?? 0)}
-          </span>
+      <Surface className="mb-8 p-5">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-semibold text-white">Storage posture</h2>
+            <p className="mt-1 text-sm text-slate-500">Encrypted originals and rendered secure previews.</p>
+          </div>
+          <span className="text-sm text-slate-300">{formatBytes(storageUsed)} / {formatBytes(user?.storageLimit ?? 0)}</span>
         </div>
-        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-indigo-600 rounded-full transition-all"
-            style={{ width: `${storagePercent}%` }}
-          />
+        <div className="h-2.5 overflow-hidden rounded-full bg-slate-800">
+          <div className="h-full rounded-full bg-teal-400 transition-all" style={{ width: `${storagePercent}%` }} />
         </div>
-      </div>
+      </Surface>
 
-      {/* Recent Documents */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800">
-        <div className="flex items-center justify-between p-5 border-b border-slate-800">
+      <Surface>
+        <div className="flex items-center justify-between border-b border-slate-800/80 p-5">
           <h2 className="font-semibold text-white">Recent Documents</h2>
-          <Link href="/documents" className="text-sm text-indigo-400 hover:text-indigo-300">View all</Link>
+          <Link href="/documents" className="text-sm font-medium text-teal-300 hover:text-teal-200">
+            View all
+          </Link>
         </div>
         <div className="divide-y divide-slate-800">
           {recentDocuments.length === 0 ? (
-            <div className="p-4 sm:p-6 lg:p-8 text-center">
-              <p className="text-slate-500 text-sm mb-4">No documents yet</p>
-              <Link href="/upload" className="text-indigo-400 hover:text-indigo-300 text-sm">
-                Upload your first document →
-              </Link>
+            <div className="p-5">
+              <EmptyState
+                icon={FileText}
+                title="No documents yet"
+                description="Upload a PDF, Office document or image to start creating secure share links."
+                href="/upload"
+                action="Upload first document"
+              />
             </div>
           ) : (
             recentDocuments.map((doc: typeof recentDocuments[number]) => (
-              <div key={doc.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex-1 min-w-0">
-                  <Link
-                    href={`/documents/${doc.id}`}
-                    className="text-sm font-medium text-slate-200 hover:text-white truncate block"
-                  >
+              <div key={doc.id} className="flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-slate-800/30 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0 flex-1">
+                  <Link href={`/documents/${doc.id}`} className="block truncate text-sm font-medium text-slate-100 hover:text-teal-200">
                     {doc.title}
                   </Link>
-                  <span className="text-xs text-slate-500">{formatDate(doc.createdAt)} · {formatBytes(Number(doc.fileSize))}</span>
+                  <span className="text-xs text-slate-500">{formatDate(doc.createdAt)} - {formatBytes(Number(doc.fileSize))}</span>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 sm:ml-4">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    doc.status === 'READY' ? 'bg-emerald-950 text-emerald-400' :
-                    doc.status === 'PROCESSING' ? 'bg-amber-950 text-amber-400' :
-                    doc.status === 'FAILED' ? 'bg-red-950 text-red-400' :
-                    'bg-slate-800 text-slate-400'
-                  }`}>{doc.status}</span>
+                  <StatusBadge
+                    className={
+                      doc.status === 'READY' ? 'bg-emerald-400/10 text-emerald-300' :
+                      doc.status === 'PROCESSING' ? 'bg-amber-400/10 text-amber-300' :
+                      doc.status === 'FAILED' ? 'bg-red-400/10 text-red-300' :
+                      'bg-slate-800 text-slate-400'
+                    }
+                  >
+                    {doc.status}
+                  </StatusBadge>
                   <span className="text-xs text-slate-500">{doc._count.shares} share{doc._count.shares !== 1 ? 's' : ''}</span>
                 </div>
               </div>
             ))
           )}
         </div>
-      </div>
-    </div>
+      </Surface>
+    </PageShell>
   )
 }

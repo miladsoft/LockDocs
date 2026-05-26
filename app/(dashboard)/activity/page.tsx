@@ -1,34 +1,50 @@
+import { Activity, CircleDot } from 'lucide-react'
 import { getSession } from '@/lib/auth/session'
 import { prisma } from '@/lib/db/client'
 import { formatDate } from '@/lib/utils'
+import { clampPage, getPage, getPageCount, Pagination } from '@/components/ui/pagination'
+import { EmptyState, PageHeader, PageShell, Surface } from '@/components/ui/surface'
 
 export const metadata = { title: 'Activity Log | Vaultix' }
 
 const ACTION_LABELS: Record<string, { label: string; color: string }> = {
-  DOCUMENT_VIEWED: { label: 'Viewed', color: 'text-blue-400' },
-  DOCUMENT_DOWNLOADED: { label: 'Downloaded', color: 'text-indigo-400' },
-  DOCUMENT_PRINTED: { label: 'Printed', color: 'text-violet-400' },
-  PAGE_VIEWED: { label: 'Page viewed', color: 'text-slate-400' },
-  SHARE_CREATED: { label: 'Share created', color: 'text-emerald-400' },
-  SHARE_REVOKED: { label: 'Share revoked', color: 'text-red-400' },
-  ACCESS_GRANTED: { label: 'Access granted', color: 'text-emerald-400' },
-  ACCESS_DENIED: { label: 'Access denied', color: 'text-red-400' },
-  OTP_VERIFIED: { label: 'OTP verified', color: 'text-emerald-400' },
-  OTP_FAILED: { label: 'OTP failed', color: 'text-red-400' },
-  UPLOAD_COMPLETED: { label: 'Uploaded', color: 'text-indigo-400' },
-  DOCUMENT_DELETED: { label: 'Deleted', color: 'text-red-400' },
-  SESSION_STARTED: { label: 'Signed in', color: 'text-emerald-400' },
-  SESSION_ENDED: { label: 'Signed out', color: 'text-slate-400' },
+  DOCUMENT_VIEWED: { label: 'Viewed', color: 'text-blue-300' },
+  DOCUMENT_DOWNLOADED: { label: 'Downloaded', color: 'text-indigo-300' },
+  DOCUMENT_PRINTED: { label: 'Printed', color: 'text-violet-300' },
+  PAGE_VIEWED: { label: 'Page viewed', color: 'text-slate-300' },
+  SHARE_CREATED: { label: 'Share created', color: 'text-emerald-300' },
+  SHARE_REVOKED: { label: 'Share revoked', color: 'text-red-300' },
+  ACCESS_GRANTED: { label: 'Access granted', color: 'text-emerald-300' },
+  ACCESS_DENIED: { label: 'Access denied', color: 'text-red-300' },
+  OTP_VERIFIED: { label: 'OTP verified', color: 'text-emerald-300' },
+  OTP_FAILED: { label: 'OTP failed', color: 'text-red-300' },
+  UPLOAD_COMPLETED: { label: 'Uploaded', color: 'text-teal-300' },
+  DOCUMENT_DELETED: { label: 'Deleted', color: 'text-red-300' },
+  SESSION_STARTED: { label: 'Signed in', color: 'text-emerald-300' },
+  SESSION_ENDED: { label: 'Signed out', color: 'text-slate-300' },
 }
 
-export default async function ActivityPage() {
+const PAGE_SIZE = 20
+
+interface Props {
+  searchParams: Promise<{ page?: string }>
+}
+
+export default async function ActivityPage({ searchParams }: Props) {
   const session = await getSession()
   if (!session) return null
 
+  const { page: pageParam } = await searchParams
+  const where = { userId: session.sub }
+  const totalLogs = await prisma.auditLog.count({ where })
+  const pageCount = getPageCount(totalLogs, PAGE_SIZE)
+  const page = clampPage(getPage(pageParam), pageCount)
+
   const logs = await prisma.auditLog.findMany({
-    where: { userId: session.sub },
+    where,
     orderBy: { createdAt: 'desc' },
-    take: 100,
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
     include: {
       document: { select: { title: true } },
       share: { select: { recipientEmail: true } },
@@ -36,45 +52,44 @@ export default async function ActivityPage() {
   })
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Activity Log</h1>
-        <p className="text-slate-400 mt-1">Complete audit trail of all document activity</p>
-      </div>
+    <PageShell>
+      <PageHeader
+        eyebrow="Audit Trail"
+        title="Activity Log"
+        description={`A chronological record of ${totalLogs} document view${totalLogs !== 1 ? 's' : ''}, access decisions, OTP events and recipient activity.`}
+      />
 
-      <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
-        <div className="divide-y divide-slate-800">
-          {logs.length === 0 && (
-            <div className="p-4 sm:p-6 lg:p-8 text-center text-slate-500 text-sm">No activity yet</div>
-          )}
-          {logs.map((log: typeof logs[number]) => {
-            const meta = ACTION_LABELS[log.action]
-            return (
-              <div key={log.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:gap-4">
-                <div className="hidden h-2 w-2 flex-shrink-0 rounded-full bg-slate-700 sm:block" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-sm font-medium ${meta?.color ?? 'text-slate-300'}`}>
-                      {meta?.label ?? log.action}
-                    </span>
-                    {log.document?.title && (
-                      <span className="text-sm text-slate-400 truncate">— {log.document.title}</span>
-                    )}
-                    {log.pageNumber && (
-                      <span className="text-xs text-slate-600">p.{log.pageNumber}</span>
-                    )}
+      {logs.length === 0 ? (
+        <EmptyState icon={Activity} title="No activity yet" description="Document and access events will appear here as recipients interact with your shares." />
+      ) : (
+        <Surface className="overflow-hidden">
+          <div className="divide-y divide-slate-800/80">
+            {logs.map((log: typeof logs[number]) => {
+              const meta = ACTION_LABELS[log.action]
+              return (
+                <div key={log.id} className="grid gap-3 px-5 py-4 transition-colors hover:bg-slate-800/30 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-4">
+                  <div className="hidden h-9 w-9 items-center justify-center rounded-lg bg-slate-800 text-slate-400 ring-1 ring-slate-700 sm:flex">
+                    <CircleDot className="h-4 w-4" />
                   </div>
-                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600">
-                    <span className="break-all">{log.ipAddress}</span>
-                    {log.share?.recipientEmail && <span className="break-all">{log.share.recipientEmail}</span>}
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`text-sm font-semibold ${meta?.color ?? 'text-slate-300'}`}>{meta?.label ?? log.action}</span>
+                      {log.document?.title && <span className="truncate text-sm text-slate-400">- {log.document.title}</span>}
+                      {log.pageNumber && <span className="rounded bg-slate-800 px-1.5 py-0.5 text-xs text-slate-500">p.{log.pageNumber}</span>}
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600">
+                      <span className="break-all">{log.ipAddress}</span>
+                      {log.share?.recipientEmail && <span className="break-all">{log.share.recipientEmail}</span>}
+                    </div>
                   </div>
+                  <span className="text-xs text-slate-600 sm:text-right">{formatDate(log.createdAt)}</span>
                 </div>
-                <span className="text-xs text-slate-600 sm:flex-shrink-0">{formatDate(log.createdAt)}</span>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    </div>
+              )
+            })}
+          </div>
+          <Pagination page={page} pageCount={pageCount} totalItems={totalLogs} pageSize={PAGE_SIZE} basePath="/activity" />
+        </Surface>
+      )}
+    </PageShell>
   )
 }

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { LockKeyhole, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -46,67 +47,99 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-slate-950 p-4">
-      <div className="w-full max-w-sm">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold text-white">Vaultix</span>
+    <div className="grid min-h-dvh app-bg lg:grid-cols-[1.05fr_0.95fr]">
+      <section className="hidden min-h-dvh flex-col justify-between border-r border-slate-800/70 p-8 lg:flex">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-400 text-slate-950 shadow-lg shadow-teal-950/30">
+            <ShieldCheck className="h-6 w-6" />
           </div>
-          <p className="text-slate-400 text-sm">Secure Document Sharing Platform</p>
+          <div>
+            <p className="text-lg font-semibold leading-none text-white">Vaultix</p>
+            <p className="mt-1 text-xs text-slate-500">Enterprise secure document sharing</p>
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-2xl backdrop-blur sm:p-8">
-          <h1 className="text-lg font-semibold text-white mb-6">Sign in to your account</h1>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Email"
-              type="email"
-              placeholder="you@company.com"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              required
-              autoComplete="email"
-            />
-            <Input
-              label="Password"
-              type="password"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              required
-              autoComplete="current-password"
-            />
-
-            {error && (
-              <p className="text-sm text-red-400 bg-red-950/40 border border-red-900/50 rounded-lg px-3 py-2">
-                {error}
-              </p>
-            )}
-
-            <Button type="submit" loading={loading} className="w-full">
-              Sign In
-            </Button>
-          </form>
-
-          <p className="text-center text-sm text-slate-500 mt-6">
-            Don&apos;t have an account?{' '}
-            <Link href="/register" className="text-indigo-400 hover:text-indigo-300">
-              Register
-            </Link>
+        <div className="max-w-xl">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-teal-300">Secure Data Room</p>
+          <h1 className="text-5xl font-semibold tracking-tight text-white">Control every document after it leaves your workspace.</h1>
+          <p className="mt-5 text-base leading-7 text-slate-400">
+            Share sensitive files with encrypted storage, secure previews, dynamic watermarking, OTP gates and complete audit visibility.
           </p>
+          <div className="mt-8 grid grid-cols-3 gap-3 text-sm">
+            {['Watermarked previews', 'Revocable links', 'Audit trails'].map((item) => (
+              <div key={item} className="rounded-xl border border-slate-800 bg-slate-900/55 p-4 text-slate-300">
+                {item}
+              </div>
+            ))}
+          </div>
         </div>
 
-        <p className="text-center text-xs text-slate-600 mt-6">
-          Protected by enterprise-grade encryption
-        </p>
-      </div>
+        <p className="text-xs text-slate-600">Built for confidential finance, legal and enterprise review workflows.</p>
+      </section>
+
+      <section className="flex min-h-dvh items-center justify-center p-4 sm:p-8">
+        <div className="w-full max-w-md">
+          <div className="mb-8 text-center lg:hidden">
+            <div className="mb-3 inline-flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-400 text-slate-950">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <span className="text-xl font-semibold text-white">Vaultix</span>
+            </div>
+            <p className="text-sm text-slate-400">Secure Document Sharing Platform</p>
+          </div>
+
+          <div className="surface rounded-2xl p-5 backdrop-blur sm:p-8">
+            <div className="mb-6">
+              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-teal-400/10 text-teal-300 ring-1 ring-teal-400/20">
+                <LockKeyhole className="h-5 w-5" />
+              </div>
+              <h1 className="text-xl font-semibold text-white">Sign in to your account</h1>
+              <p className="mt-1 text-sm text-slate-500">Access your secure document workspace.</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                label="Email"
+                type="email"
+                placeholder="you@company.com"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+                autoComplete="email"
+              />
+              <Input
+                label="Password"
+                type="password"
+                placeholder="••••••••"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required
+                autoComplete="current-password"
+              />
+
+              {error && (
+                <p className="rounded-lg border border-red-900/50 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+                  {error}
+                </p>
+              )}
+
+              <Button type="submit" loading={loading} className="w-full">
+                Sign In
+              </Button>
+            </form>
+
+            <p className="mt-6 text-center text-sm text-slate-500">
+              Don&apos;t have an account?{' '}
+              <Link href="/register" className="font-medium text-teal-300 hover:text-teal-200">
+                Register
+              </Link>
+            </p>
+          </div>
+
+          <p className="mt-6 text-center text-xs text-slate-600">Protected by enterprise-grade encryption</p>
+        </div>
+      </section>
     </div>
   )
 }

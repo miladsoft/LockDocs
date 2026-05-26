@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check } from 'lucide-react'
+import { CalendarClock, Check, CheckCircle2, Copy, Eye, Fingerprint, Mail, Printer, ShieldCheck, TextCursorInput, UserRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Surface } from '@/components/ui/surface'
 
 interface Props {
   documentId: string
@@ -16,7 +17,15 @@ interface ShareResult {
   shareUrl: string
 }
 
-export function ShareForm({ documentId }: Props) {
+const permissionItems = [
+  ['showWatermark', 'Dynamic watermark', 'Overlay recipient, IP, timestamp and session data.', ShieldCheck],
+  ['requiresOtp', 'OTP verification', 'Require a one-time email code before access.', Fingerprint],
+  ['allowDownload', 'Allow download', 'Recipient can download the original file.', Eye],
+  ['allowPrint', 'Allow print', 'Recipient can print the document.', Printer],
+  ['allowCopy', 'Allow copy text', 'Recipient can copy text from the document.', TextCursorInput],
+] as const
+
+export function ShareForm({ documentId, documentTitle }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -91,150 +100,169 @@ export function ShareForm({ documentId }: Props) {
 
   if (result) {
     return (
-      <div className="space-y-4 rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+      <Surface className="mx-auto max-w-3xl p-5 sm:p-6">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-300 ring-1 ring-emerald-400/20">
+            <CheckCircle2 className="h-6 w-6" />
           </div>
-          <div>
-            <p className="text-white font-medium">Share link created</p>
-            <p className="text-slate-400 text-sm">Send this link to the recipient</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-lg font-semibold text-white">Share link created</p>
+            <p className="mt-1 text-sm text-slate-500">Send this controlled access link to the recipient.</p>
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+              <input
+                readOnly
+                value={result.shareUrl}
+                className="min-h-10 min-w-0 flex-1 truncate rounded-lg border border-slate-700 bg-slate-950/55 px-3 font-mono text-sm text-slate-200"
+              />
+              <Button onClick={copyLink} variant="outline" size="sm">
+                <Copy className="h-4 w-4" />
+                {copied ? 'Copied' : 'Copy'}
+              </Button>
+            </div>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <Button onClick={() => setResult(null)} variant="ghost" size="sm">
+                Create another
+              </Button>
+              <Button onClick={() => router.push(`/documents/${documentId}`)} variant="secondary" size="sm">
+                Back to document
+              </Button>
+            </div>
           </div>
         </div>
-
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <input
-            readOnly
-            value={result.shareUrl}
-            className="min-w-0 flex-1 truncate rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 font-mono text-sm text-slate-200"
-          />
-          <Button onClick={copyLink} variant="outline" size="sm">
-            {copied ? 'Copied!' : 'Copy'}
-          </Button>
-        </div>
-
-        <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-          <Button onClick={() => setResult(null)} variant="ghost" size="sm">
-            Create another
-          </Button>
-          <Button onClick={() => router.push(`/documents/${documentId}`)} variant="secondary" size="sm">
-            Back to document
-          </Button>
-        </div>
-      </div>
+      </Surface>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Recipient */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-5 space-y-4">
-        <h2 className="font-semibold text-white">Recipient</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Input
-            label="Name (optional)"
-            value={form.recipientName}
-            onChange={(e) => setForm({ ...form, recipientName: e.target.value })}
-            placeholder="Jane Smith"
-          />
-          <Input
-            label="Email (optional)"
-            type="email"
-            value={form.recipientEmail}
-            onChange={(e) => setForm({ ...form, recipientEmail: e.target.value })}
-            placeholder="jane@company.com"
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-slate-400">Message (optional)</label>
-          <textarea
-            value={form.message}
-            onChange={(e) => setForm({ ...form, message: e.target.value })}
-            rows={2}
-            className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder="Please review this document..."
-          />
-        </div>
-      </div>
+    <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="space-y-6">
+        <Surface className="p-5 sm:p-6">
+          <div className="mb-5 flex items-center gap-2">
+            <UserRound className="h-5 w-5 text-teal-300" />
+            <h2 className="font-semibold text-white">Recipient</h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              label="Name (optional)"
+              value={form.recipientName}
+              onChange={(e) => setForm({ ...form, recipientName: e.target.value })}
+              placeholder="Jane Smith"
+            />
+            <Input
+              label="Email (optional)"
+              type="email"
+              value={form.recipientEmail}
+              onChange={(e) => setForm({ ...form, recipientEmail: e.target.value })}
+              placeholder="jane@company.com"
+            />
+          </div>
+          <div className="mt-4 flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-slate-300">Message (optional)</label>
+            <textarea
+              value={form.message}
+              onChange={(e) => setForm({ ...form, message: e.target.value })}
+              rows={3}
+              className="w-full rounded-lg border border-slate-700 bg-slate-950/55 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 transition-colors focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400/70"
+              placeholder="Please review this document..."
+            />
+          </div>
+        </Surface>
 
-      {/* Permissions */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-5 space-y-4">
-        <h2 className="font-semibold text-white">Permissions</h2>
-        <div className="grid gap-3 lg:grid-cols-2">
-          {([
-            ['showWatermark', 'Show watermark', 'Overlay dynamic watermark with recipient info'],
-            ['requiresOtp', 'Require OTP', 'Recipient must verify via one-time code'],
-            ['allowDownload', 'Allow download', 'Recipient can download the original file'],
-            ['allowPrint', 'Allow print', 'Recipient can print the document'],
-            ['allowCopy', 'Allow copy text', 'Recipient can copy text from the document'],
-          ] as const).map(([key, label, desc]) => {
-            const checked = form[key]
+        <Surface className="p-5 sm:p-6">
+          <div className="mb-5 flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-teal-300" />
+            <h2 className="font-semibold text-white">Permissions</h2>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {permissionItems.map(([key, label, desc, Icon]) => {
+              const checked = form[key]
 
-            return (
-              <label
-                key={key}
-                className={`group flex min-h-[84px] cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
-                  checked
-                    ? 'border-indigo-500/70 bg-indigo-500/10'
-                    : 'border-slate-800 bg-slate-950/35 hover:border-slate-700 hover:bg-slate-900'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggle(key)}
-                  className="sr-only"
-                />
-                <span
-                  aria-hidden="true"
-                  className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border transition-colors ${
+              return (
+                <label
+                  key={key}
+                  className={`group flex min-h-[104px] cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
                     checked
-                      ? 'border-indigo-400 bg-indigo-500 text-white'
-                      : 'border-slate-600 bg-slate-800 text-transparent group-hover:border-slate-500'
+                      ? 'border-teal-400/60 bg-teal-400/10'
+                      : 'border-slate-800 bg-slate-950/35 hover:border-slate-700 hover:bg-slate-900/80'
                   }`}
                 >
-                  <Check className="h-4 w-4" strokeWidth={3} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-medium text-slate-100">{label}</span>
-                  <span className="mt-1 block text-xs leading-5 text-slate-500">{desc}</span>
-                </span>
-              </label>
-            )
-          })}
-        </div>
+                  <input type="checkbox" checked={checked} onChange={() => toggle(key)} className="sr-only" />
+                  <span
+                    aria-hidden="true"
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors ${
+                      checked
+                        ? 'border-teal-300 bg-teal-400 text-slate-950'
+                        : 'border-slate-700 bg-slate-800 text-slate-400 group-hover:border-slate-600'
+                    }`}
+                  >
+                    {checked ? <Check className="h-4 w-4" strokeWidth={3} /> : <Icon className="h-4 w-4" />}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium text-slate-100">{label}</span>
+                    <span className="mt-1 block text-xs leading-5 text-slate-500">{desc}</span>
+                  </span>
+                </label>
+              )
+            })}
+          </div>
+        </Surface>
       </div>
 
-      {/* Limits */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-5 space-y-4">
-        <h2 className="font-semibold text-white">Limits</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Input
-            label="Expiry date (optional)"
-            type="datetime-local"
-            value={form.expiresAt}
-            onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
-          />
-          <Input
-            label="Max views (optional)"
-            type="number"
-            min="1"
-            value={form.maxViews}
-            onChange={(e) => setForm({ ...form, maxViews: e.target.value })}
-            placeholder="Unlimited"
-          />
-        </div>
-      </div>
+      <aside className="space-y-6">
+        <Surface className="p-5 sm:p-6">
+          <div className="mb-5 flex items-center gap-2">
+            <CalendarClock className="h-5 w-5 text-amber-300" />
+            <h2 className="font-semibold text-white">Access limits</h2>
+          </div>
+          <div className="space-y-4">
+            <Input
+              label="Expiry date (optional)"
+              type="datetime-local"
+              value={form.expiresAt}
+              onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
+            />
+            <Input
+              label="Max views (optional)"
+              type="number"
+              min="1"
+              value={form.maxViews}
+              onChange={(e) => setForm({ ...form, maxViews: e.target.value })}
+              placeholder="Unlimited"
+            />
+          </div>
+        </Surface>
 
-      {error && (
-        <p className="text-sm text-red-400 bg-red-950/40 border border-red-900/50 rounded-lg px-3 py-2">{error}</p>
-      )}
+        <Surface className="p-5 sm:p-6">
+          <div className="mb-4 flex items-center gap-2">
+            <Mail className="h-5 w-5 text-teal-300" />
+            <h2 className="font-semibold text-white">Share summary</h2>
+          </div>
+          <div className="space-y-3 text-sm">
+            <div className="rounded-lg border border-slate-800 bg-slate-950/35 p-3">
+              <p className="text-xs text-slate-500">Document</p>
+              <p className="mt-1 truncate font-medium text-slate-200">{documentTitle}</p>
+            </div>
+            <div className="rounded-lg border border-slate-800 bg-slate-950/35 p-3">
+              <p className="text-xs text-slate-500">Recipient</p>
+              <p className="mt-1 truncate font-medium text-slate-200">{form.recipientEmail || 'Anyone with link'}</p>
+            </div>
+            <div className="rounded-lg border border-slate-800 bg-slate-950/35 p-3">
+              <p className="text-xs text-slate-500">Protection</p>
+              <p className="mt-1 text-slate-200">
+                {form.showWatermark ? 'Watermark on' : 'Watermark off'} · {form.requiresOtp ? 'OTP on' : 'OTP off'}
+              </p>
+            </div>
+          </div>
+        </Surface>
 
-      <Button type="submit" loading={loading} className="w-full">
-        Generate Secure Link
-      </Button>
+        {error && (
+          <p className="rounded-lg border border-red-900/50 bg-red-950/40 px-3 py-2 text-sm text-red-300">{error}</p>
+        )}
+
+        <Button type="submit" loading={loading} className="w-full">
+          Generate Secure Link
+        </Button>
+      </aside>
     </form>
   )
 }

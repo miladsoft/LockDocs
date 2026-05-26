@@ -2,13 +2,61 @@
 
 :root {
   --font-inter: 'Inter', system-ui, sans-serif;
+  color-scheme: dark;
 }
 
 @theme inline {
   --font-sans: var(--font-inter);
 }
 
-/* Secure viewer — disable all user interactions */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #020617;
+}
+
+body {
+  min-width: 320px;
+}
+
+::selection {
+  background: rgba(20, 184, 166, 0.32);
+  color: #f8fafc;
+}
+
+.app-bg {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(20, 184, 166, 0.12), transparent 28rem),
+    radial-gradient(circle at 85% 12%, rgba(99, 102, 241, 0.12), transparent 30rem),
+    linear-gradient(135deg, #020617 0%, #07111f 48%, #020617 100%);
+}
+
+.surface {
+  border: 1px solid rgba(51, 65, 85, 0.72);
+  background: rgba(15, 23, 42, 0.78);
+  box-shadow: 0 18px 50px rgba(2, 6, 23, 0.28);
+}
+
+.surface-soft {
+  border: 1px solid rgba(51, 65, 85, 0.55);
+  background: rgba(15, 23, 42, 0.52);
+}
+
+.hairline {
+  border-color: rgba(51, 65, 85, 0.68);
+}
+
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.24);
+}
+
+/* Secure viewer - disable all user interactions */
 .vaultix-secure {
   user-select: none;
   -webkit-user-select: none;
@@ -19,5 +67,5 @@
 /* Scrollbar styling */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: #475569; }

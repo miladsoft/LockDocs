@@ -1,15 +1,17 @@
 import { UploadZone } from '@/components/upload/UploadZone'
+import { PageHeader, PageShell } from '@/components/ui/surface'
 
 export const metadata = { title: 'Upload Document | Vaultix' }
 
 export default function UploadPage() {
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Upload Document</h1>
-        <p className="text-slate-400 mt-1">Your file will be encrypted and stored securely. Original files are never exposed.</p>
-      </div>
+    <PageShell className="max-w-5xl">
+      <PageHeader
+        eyebrow="Secure Intake"
+        title="Upload Document"
+        description="Files are validated, encrypted and processed into secure previews. Originals are never exposed directly to recipients."
+      />
       <UploadZone />
-    </div>
+    </PageShell>
   )
 }
