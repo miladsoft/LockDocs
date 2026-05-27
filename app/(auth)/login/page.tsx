@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { LockKeyhole, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,37 +49,70 @@ export default function LoginPage() {
 
   return (
     <div className="grid min-h-dvh app-bg lg:grid-cols-[1.05fr_0.95fr]">
-      <section className="hidden min-h-dvh flex-col justify-between border-r border-slate-800/70 p-8 lg:flex">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-400 text-slate-950 shadow-lg shadow-teal-950/30">
-            <ShieldCheck className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-lg font-semibold leading-none text-white">Vaultix</p>
-            <p className="mt-1 text-xs text-slate-500">Enterprise secure document sharing</p>
-          </div>
-        </div>
+      <section className="relative hidden min-h-dvh overflow-hidden border-r border-slate-800/70 p-8 lg:block">
+        <motion.div
+          className="absolute inset-x-10 top-1/2 h-px bg-gradient-to-r from-transparent via-teal-300/30 to-transparent"
+          animate={{ opacity: [0.2, 0.8, 0.2], y: [-120, 120, -120] }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <div className="relative z-10 flex min-h-[calc(100dvh-4rem)] flex-col justify-between">
+          <motion.div
+            className="flex items-center gap-3"
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+          >
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-400 text-slate-950 shadow-lg shadow-teal-950/30">
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-lg font-semibold leading-none text-white">Vaultix</p>
+              <p className="mt-1 text-xs text-slate-500">Secure workspace</p>
+            </div>
+          </motion.div>
 
-        <div className="max-w-xl">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-teal-300">Secure Data Room</p>
-          <h1 className="text-5xl font-semibold tracking-tight text-white">Control every document after it leaves your workspace.</h1>
-          <p className="mt-5 text-base leading-7 text-slate-400">
-            Share sensitive files with encrypted storage, secure previews, dynamic watermarking, OTP gates and complete audit visibility.
-          </p>
-          <div className="mt-8 grid grid-cols-3 gap-3 text-sm">
-            {['Watermarked previews', 'Revocable links', 'Audit trails'].map((item) => (
-              <div key={item} className="rounded-xl border border-slate-800 bg-slate-900/55 p-4 text-slate-300">
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
+          <motion.div
+            className="max-w-xl"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.1 }}
+          >
+            <p className="mb-4 text-xs font-semibold uppercase text-teal-300">Secure Access</p>
+            <h1 className="text-5xl font-semibold text-white">Welcome back.</h1>
+            <p className="mt-5 text-base leading-7 text-slate-400">Sign in to manage secure documents, links and activity.</p>
+            <div className="mt-8 grid grid-cols-3 gap-3 text-sm">
+              {['Preview', 'Share', 'Track'].map((item, index) => (
+                <motion.div
+                  key={item}
+                  className="rounded-lg border border-slate-800 bg-slate-900/55 p-4 text-slate-300"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.25 + index * 0.08 }}
+                >
+                  {item}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
 
-        <p className="text-xs text-slate-600">Built for confidential finance, legal and enterprise review workflows.</p>
+          <motion.p
+            className="text-xs text-slate-600"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.45, delay: 0.45 }}
+          >
+            Protected access for sensitive work.
+          </motion.p>
+        </div>
       </section>
 
       <section className="flex min-h-dvh items-center justify-center p-4 sm:p-8">
-        <div className="w-full max-w-md">
+        <motion.div
+          className="w-full max-w-md"
+          initial={{ opacity: 0, y: 18, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.45, ease: 'easeOut' }}
+        >
           <div className="mb-8 text-center lg:hidden">
             <div className="mb-3 inline-flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-400 text-slate-950">
@@ -86,16 +120,16 @@ export default function LoginPage() {
               </div>
               <span className="text-xl font-semibold text-white">Vaultix</span>
             </div>
-            <p className="text-sm text-slate-400">Secure Document Sharing Platform</p>
+            <p className="text-sm text-slate-400">Secure workspace</p>
           </div>
 
-          <div className="surface rounded-2xl p-5 backdrop-blur sm:p-8">
+          <div className="surface rounded-2xl p-5 backdrop-blur transition-all duration-300 hover:border-teal-400/30 sm:p-8">
             <div className="mb-6">
               <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-teal-400/10 text-teal-300 ring-1 ring-teal-400/20">
                 <LockKeyhole className="h-5 w-5" />
               </div>
-              <h1 className="text-xl font-semibold text-white">Sign in to your account</h1>
-              <p className="mt-1 text-sm text-slate-500">Access your secure document workspace.</p>
+              <h1 className="text-xl font-semibold text-white">Sign in</h1>
+              <p className="mt-1 text-sm text-slate-500">Welcome back.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -125,20 +159,20 @@ export default function LoginPage() {
               )}
 
               <Button type="submit" loading={loading} className="w-full">
-                Sign In
+                Continue
               </Button>
             </form>
 
             <p className="mt-6 text-center text-sm text-slate-500">
-              Don&apos;t have an account?{' '}
+              New here?{' '}
               <Link href="/register" className="font-medium text-teal-300 hover:text-teal-200">
-                Register
+                Create account
               </Link>
             </p>
           </div>
 
-          <p className="mt-6 text-center text-xs text-slate-600">Protected by enterprise-grade encryption</p>
-        </div>
+          <p className="mt-6 text-center text-xs text-slate-600">Protected by encryption</p>
+        </motion.div>
       </section>
     </div>
   )
